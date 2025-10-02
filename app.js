@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   //const API_BASE = "http://192.168.1.40:5678/webhook/api/despensa";
-  //const API_BASE = "https://pseudoambidextrous-confidingly-christen.ngrok-free.dev/webhook/api/despensa";
+  //const API_BASE = "https://cookie-responding-equipment-graphical.trycloudflare.com/webhook/api/despensa";
   const isGitHub = location.hostname.includes("github.io");
   const API_BASE = isGitHub
   ? "https://cookie-responding-equipment-graphical.trycloudflare.com/webhook/api/despensa"
@@ -252,6 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   scanAdd.addEventListener("click", addProduct);
 });
+
 
 
 
