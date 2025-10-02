@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>La Despensa de EBB</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white shadow-md" role="banner" aria-label="Encabezado">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-green-600">La Despensa de EBB</h1>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="flex-grow max-w-5xl mx-auto px-4 py-8" role="main" aria-label="Contenido principal">
+    <div class="grid gap-6 md:grid-cols-2">
+
+      <!-- Card Escanear -->
+      <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+        <h2 class="text-lg font-semibold mb-4">Escanear producto</h2>
+        <button id="btn-scan"
+          class="px-6 py-3 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition">
+          Escanear
+        </button>
+        <input id="barcode-input" type="text" placeholder="Introduce código de barras"
+        class="mt-3 px-3 py-2 border border-gray-300 rounded-lg w-full text-sm" />
+      </div>
+
+      <!-- Card Inventario -->
+      <div class="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+        <h2 class="text-lg font-semibold mb-4">Ver inventario</h2>
+        <button id="btn-list"
+          class="px-6 py-3 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition">
+          Consultar
+        </button>
+      </div>
+    </div>
+
+    <!-- Inventario -->
+    <section class="mt-10">
+      <div class="mb-4 flex flex-wrap gap-3 items-center">
+        <button id="filter-all" class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-sm">Todos</button>
+        <button id="filter-stock" class="px-4 py-2 rounded-lg bg-yellow-200 hover:bg-yellow-300 text-sm">Stock bajo</button>
+        <button id="filter-expiry" class="px-4 py-2 rounded-lg bg-red-200 hover:bg-red-300 text-sm">Caduca pronto</button>
+        <div class="ml-auto flex items-center gap-2">
+          <input id="search-input" type="text" placeholder="Buscar…" class="px-3 py-2 rounded-lg border border-gray-300 text-sm" />
+          <button id="search-clear" class="px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-sm">Limpiar</button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto bg-white rounded-xl shadow">
+        <table class="min-w-full text-sm text-left text-gray-600">
+          <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+            <tr>
+              <th class="px-4 py-3">Nombre</th>
+              <th class="px-4 py-3">Formato</th>
+              <th class="px-4 py-3">Cantidad</th>
+              <th class="px-4 py-3">Caducidad</th>
+              <th class="px-4 py-3">Ubicación</th>
+              <th class="px-4 py-3">Stock Bajo</th>
+            </tr>
+          </thead>
+          <tbody id="inventory-body" class="divide-y divide-gray-200">
+            <!-- Filas dinámicas desde JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white shadow-inner" role="contentinfo" aria-label="Pie de página">
+    <div class="max-w-5xl mx-auto px-4 py-4 text-center text-sm text-gray-500">
+      © 2025 Despensa App
+    </div>
+  </footer>
+
+  <!-- Loader -->
+  <div id="loader" class="fixed inset-0 bg-black/10 backdrop-blur-sm hidden items-center justify-center">
+    <div class="bg-white px-4 py-3 rounded-lg shadow text-sm text-gray-700">Cargando…</div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-4 right-4 hidden">
+    <div class="bg-gray-900 text-white text-sm px-4 py-3 rounded-lg shadow">Mensaje</div>
+  </div>
+
+  <!-- Modal escaneo -->
+  <div id="scan-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center">
+    <div class="bg-white w-full max-w-md rounded-xl shadow-lg">
+      <div class="px-5 py-4 border-b">
+        <h3 class="text-lg font-semibold">Producto escaneado</h3>
+      </div>
+      <div class="px-5 py-4 space-y-2 text-sm">
+        <div class="flex items-center gap-3">
+          <img id="scan-img" src="" alt="Imagen producto" class="w-16 h-16 object-cover rounded-lg bg-gray-100" />
+          <div>
+            <div id="scan-name" class="font-medium">Nombre</div>
+            <div id="scan-brand" class="text-gray-500">Marca</div>
+            <div id="scan-category" class="text-gray-500">Categoría</div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mt-3">
+          <div>
+            <label class="block text-gray-500 mb-1">Formato</label>
+            <input id="scan-formato" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Ej: 1 l" />
+          </div>
+          <div>
+            <label class="block text-gray-500 mb-1">Cantidad</label>
+            <input id="scan-cantidad" type="number" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Ej: 6" />
+          </div>
+          <div>
+            <label class="block text-gray-500 mb-1">Ubicación</label>
+            <input id="scan-ubicacion" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Nevera / Despensa" />
+          </div>
+          <div>
+            <label class="block text-gray-500 mb-1">Caducidad</label>
+            <input id="scan-caducidad" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+        </div>
+      </div>
+      <div class="px-5 py-4 border-t flex justify-end gap-3">
+        <button id="scan-close" class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-sm">Cerrar</button>
+        <button id="scan-add" class="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm">Guardar en inventario</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lógica API separada -->
+  <script src="app.js"></script>
+</body>
+</html>
