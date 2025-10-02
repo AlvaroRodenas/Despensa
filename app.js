@@ -103,10 +103,10 @@ document.addEventListener("DOMContentLoaded", () => {
       showLoader(true);
       currentFilter = filter;
 
-      //const res = await fetch(`${API_BASE}/list?filter=${filter}`);
-      //if (!res.ok) throw new Error("Error en la API /list");
-      //const data = await res.json();
-//
+      const res = await fetch(`${API_BASE}/list?filter=${filter}`);
+      if (!res.ok) throw new Error("Error en la API /list");
+      const data = await res.json();
+/*
       const res = await fetch(`${API_BASE}/list?filter=${filter}`);
       if (!res.ok) throw new Error("Error en la API /list");
 
@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("La API devolvió algo que no es JSON");
         return; // salimos para no romper el flujo
       }
-//
+*/
       
       inventoryBody.innerHTML = "";
       const items = data.items || [];
@@ -269,6 +269,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   scanAdd.addEventListener("click", addProduct);
 });
+
 
 
 
