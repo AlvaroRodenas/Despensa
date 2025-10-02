@@ -1,10 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
   //const API_BASE = "http://192.168.1.40:5678/webhook/api/despensa";
-  const API_BASE = "https://pseudoambidextrous-confidingly-christen.ngrok-free.dev/webhook/api/despensa";
-  //const isGitHub = location.hostname.includes("github.io");
-  //const API_BASE = isGitHub
-  //? "https://pseudoambidextrous-confidingly-christen.ngrok-free.dev/webhook/api/despensa"
-  //: "http://192.168.1.40:5678/webhook/api/despensa";
+  //const API_BASE = "https://pseudoambidextrous-confidingly-christen.ngrok-free.dev/webhook/api/despensa";
+  const isGitHub = location.hostname.includes("github.io");
+  const API_BASE = isGitHub
+  ? "https://cookie-responding-equipment-graphical.trycloudflare.com/webhook/api/despensa"
+  : "http://192.168.1.40:5678/webhook/api/despensa";
 
 
   // Botones principales
@@ -102,28 +102,10 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       showLoader(true);
       currentFilter = filter;
-console.log("URL llamada:", `${API_BASE}/list?filter=${filter}`);
 
       const res = await fetch(`${API_BASE}/list?filter=${filter}`);
       if (!res.ok) throw new Error("Error en la API /list");
       const data = await res.json();
-/*
-      const res = await fetch(`${API_BASE}/list?filter=${filter}`);
-      if (!res.ok) throw new Error("Error en la API /list");
-
-      // Depuración: ver qué devuelve realmente el servidor
-      const text = await res.text();
-      console.log("Respuesta cruda del servidor:", text);
-
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        console.error("No se pudo parsear como JSON:", e);
-        showToast("La API devolvió algo que no es JSON");
-        return; // salimos para no romper el flujo
-      }
-*/
       
       inventoryBody.innerHTML = "";
       const items = data.items || [];
@@ -270,6 +252,7 @@ console.log("URL llamada:", `${API_BASE}/list?filter=${filter}`);
 
   scanAdd.addEventListener("click", addProduct);
 });
+
 
 
 
