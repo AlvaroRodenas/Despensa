@@ -1,5 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const API_BASE = "http://192.168.1.40:5678/webhook/api/despensa";
+  //const API_BASE = "http://192.168.1.40:5678/webhook/api/despensa";
+ 
+  const isGitHub = location.hostname.includes("github.io");
+  const API_BASE = isGitHub
+  ? "https://pseudoambidextrous-confidingly-christen.ngrok-free.dev/webhook/api/despensa"
+  : "http://192.168.1.40:5678/webhook/api/despensa";
+
 
   // Botones principales
   const btnScan = document.getElementById("btn-scan");
@@ -246,3 +252,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
   scanAdd.addEventListener("click", addProduct);
 });
+
