@@ -102,6 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       showLoader(true);
       currentFilter = filter;
+console.log("URL llamada:", `${API_BASE}/list?filter=${filter}`);
 
       const res = await fetch(`${API_BASE}/list?filter=${filter}`);
       if (!res.ok) throw new Error("Error en la API /list");
@@ -269,6 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   scanAdd.addEventListener("click", addProduct);
 });
+
 
 
 
