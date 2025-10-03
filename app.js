@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   const isGitHub = location.hostname.includes("github.io");
   const API_BASE = isGitHub
-    ? "https://cookie-responding-equipment-graphical.trycloudflare.com/webhook/api/despensa/producto"
-    : "http://192.168.1.40:5678/webhook/api/despensa/producto";
+    ? "https://cookie-responding-equipment-graphical.trycloudflare.com/webhook/api/despensa"
+    : "http://192.168.1.40:5678/webhook/api/despensa";
 
   // Botones principales
   const btnScan = document.getElementById("btn-scan");
@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       showLoader(true);
       const codigo = barcodeInput?.value.trim() || "8480000109088";
-      const res = await fetch(`${API_BASE}/scan?codigo_barras=${codigo}`);
+      const res = await fetch(`${API_BASE}/producto/scan?codigo_barras=${codigo}`);
       if (!res.ok) throw new Error("Error en la API /scan");
       const data = await res.json();
 
@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
       showLoader(true);
       currentFilter = filter;
 
-      const res = await fetch(`${API_BASE}/list?filter=${filter}`);
+      const res = await fetch(`${API_BASE}/producto/list?filter=${filter}`);
       if (!res.ok) throw new Error("Error en la API /list");
       const data = await res.json();
       
@@ -191,7 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       console.log("Enviando a /add:", body);
 
-      const res = await fetch(`${API_BASE}/add`, {
+      const res = await fetch(`${API_BASE}/producto/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
@@ -244,3 +244,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
   scanAdd.addEventListener("click", addProduct);
 });
+
