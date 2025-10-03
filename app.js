@@ -82,7 +82,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Guardamos el código de barras en dataset
       scanModal.dataset.codigo = data.codigo_barras || codigo;
-
+      
+      // Rellenar el select de almacenes
+      await listAlmacenes("scan-ubicacion");
+      
       // Mostrar modal
       scanModal.classList.remove("hidden");
       scanModal.classList.add("flex");
@@ -378,6 +381,7 @@ async function delAlmacen(rowNumber) {
 
   scanAdd.addEventListener("click", addProduct);
 });
+
 
 
 
