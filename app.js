@@ -210,6 +210,99 @@ document.addEventListener("DOMContentLoaded", () => {
       showLoader(false);
     }
   }
+// --- Gestión de Almacenes ---
+
+// Listar almacenes
+async function listAlmacenes() {
+  try {
+    showLoader(true);
+    const res = await fetch(`${API_BASE}/almacen/list`);
+    if (!res.ok) throw new Error("Error en la API /almacen/list");
+    const data = await res.json();
+
+    console.log("Almacenes:", data.items);
+    // Aquí puedes rellenar un <select> o tabla con los almacenes
+    // Ejemplo: poblar un dropdown
+    const ubicacionSelect = document.getElementById("scan-ubicacion");
+    if (ubicacionSelect) {
+      ubicacionSelect.innerHTML = "";
+      data.items.forEach(al => {
+        const opt = document.createElement("option");
+        opt.value = al.rowNumber;
+        opt.textContent = al.Nombre;
+        ubicacionSelect.appendChild(opt);
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    showToast("Error al listar almacenes");
+  } finally {
+    showLoader(false);
+  }
+}
+
+// Añadir almacén
+async function addAlmacen(nombre) {
+  try {
+    showLoader(true);
+    const body = { Nombre: nombre };
+    const res = await fetch(`${API_BASE}/almacen/add`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error("Error en la API /almacen/add");
+    showToast("Almacén añadido correctamente");
+    listAlmacenes();
+  } catch (err) {
+    console.error(err);
+    showToast("Error al añadir almacén");
+  } finally {
+    showLoader(false);
+  }
+}
+
+// Modificar almacén
+async function modAlmacen(rowNumber, nuevoNombre) {
+  try {
+    showLoader(true);
+    const body = { rowNumber, Nombre: nuevoNombre };
+    const res = await fetch(`${API_BASE}/almacen/mod`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error("Error en la API /almacen/mod");
+    showToast("Almacén modificado correctamente");
+    listAlmacenes();
+  } catch (err) {
+    console.error(err);
+    showToast("Error al modificar almacén");
+  } finally {
+    showLoader(false);
+  }
+}
+
+// Eliminar almacén
+async function delAlmacen(rowNumber) {
+  try {
+    showLoader(true);
+    const body = { rowNumber };
+    const res = await fetch(`${API_BASE}/almacen/del`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error("Error en la API /almacen/del");
+    showToast("Almacén eliminado correctamente");
+    listAlmacenes();
+  } catch (err) {
+    console.error(err);
+    showToast("Error al eliminar almacén");
+  } finally {
+    showLoader(false);
+  }
+}
 
     // --- Eventos ---
   btnScan.addEventListener("click", scan);
@@ -243,5 +336,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   scanAdd.addEventListener("click", addProduct);
+
+  // Precargar almacenes al iniciar la app
+  listAlmacenes();
 });
+
 
