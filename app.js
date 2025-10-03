@@ -1,11 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
-  //const API_BASE = "http://192.168.1.40:5678/webhook/api/despensa";
-  //const API_BASE = "https://cookie-responding-equipment-graphical.trycloudflare.com/webhook/api/despensa";
   const isGitHub = location.hostname.includes("github.io");
   const API_BASE = isGitHub
-  ? "https://cookie-responding-equipment-graphical.trycloudflare.com/webhook/api/despensa"
-  : "http://192.168.1.40:5678/webhook/api/despensa";
-
+    ? "https://cookie-responding-equipment-graphical.trycloudflare.com/webhook/api/despensa/producto"
+    : "http://192.168.1.40:5678/webhook/api/despensa/producto";
 
   // Botones principales
   const btnScan = document.getElementById("btn-scan");
@@ -41,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Input de código de barras
   const barcodeInput = document.getElementById("barcode-input");
 
-  // Variables globales para persistencia
+  // Variables globales
   let currentFilter = "all";
   let currentSearch = "";
 
@@ -73,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error("Error en la API /scan");
       const data = await res.json();
 
-      // Rellenar modal con datos
+      // Rellenar modal
       scanImg.src = data.imagen || "";
       scanName.textContent = data.nombre || "Sin nombre";
       scanBrand.textContent = data.marca || "";
@@ -123,8 +120,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // Rellenar filas
       items.forEach(prod => {
         const tr = document.createElement("tr");
+        tr.dataset.rowNumber = prod.rowNumber; // guardamos rowNumber
 
-        // Colorear fila si stock bajo o caduca pronto
         if (prod.StockBajo === true) {
           tr.className = "bg-yellow-50 hover:bg-yellow-100";
         } else if (prod.DiasHastaCaducidad !== "" && Number(prod.DiasHastaCaducidad) <= 3) {
@@ -147,7 +144,6 @@ document.addEventListener("DOMContentLoaded", () => {
         inventoryBody.appendChild(tr);
       });
 
-      // Aplicar búsqueda persistente
       applySearch();
     } catch (err) {
       console.error(err);
@@ -157,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- Búsqueda en tabla ---
+  // --- Búsqueda ---
   function applySearch() {
     currentSearch = searchInput.value.trim().toLowerCase();
     const rows = inventoryBody.querySelectorAll("tr");
@@ -170,7 +166,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Guardar producto desde modal ---
   async function addProduct() {
     try {
-      // Validaciones previas
       if (!scanCantidad.value || scanCantidad.value <= 0) {
         showToast("La cantidad debe ser mayor que 0");
         return;
@@ -183,7 +178,6 @@ document.addEventListener("DOMContentLoaded", () => {
       showLoader(true);
 
       const body = {
-        ID: "",
         Nombre: scanName.textContent || "",
         Formato: scanFormato.value || "",
         Cantidad: scanCantidad.value || 1,
@@ -192,9 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
         MinStock: 1,
         Marca: scanBrand.textContent || "",
         BarCode: scanModal.dataset.codigo || "",
-        Imagen: scanImg.src || "",
-        DiasHastaCaducidad: "",
-        StockBajo: ""
+        Imagen: scanImg.src || ""
       };
 
       console.log("Enviando a /add:", body);
@@ -210,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
       showToast("Producto añadido correctamente");
       scanModal.classList.add("hidden");
       scanModal.classList.remove("flex");
-      list(currentFilter); // refresca manteniendo filtro
+      list(currentFilter);
     } catch (err) {
       console.error(err);
       showToast("Error al añadir producto");
@@ -219,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- Eventos ---
+    // --- Eventos ---
   btnScan.addEventListener("click", scan);
   btnList.addEventListener("click", () => {
     list("all");
@@ -252,10 +244,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
   scanAdd.addEventListener("click", addProduct);
 });
-
-
-
-
-
-
-
