@@ -214,7 +214,7 @@ async function addProduct() {
   }
 }
 
-  // --- Modificar producto ---
+ // --- Modificar producto ---
 async function modProduct(rowNumber, datos) {
   try {
     showLoader(true);
@@ -243,7 +243,15 @@ async function modProduct(rowNumber, datos) {
     if (!res.ok) throw new Error("Error en la API /producto/mod");
 
     showToast("Producto modificado correctamente");
+
+    // Refrescar lista
     list(currentFilter);
+
+    // Cerrar modal de edición
+    const editModal = document.getElementById("edit-modal");
+    editModal.classList.add("hidden");
+    editModal.classList.remove("flex");
+
   } catch (err) {
     console.error(err);
     showToast("Error al modificar producto");
@@ -251,6 +259,7 @@ async function modProduct(rowNumber, datos) {
     showLoader(false);
   }
 }
+
   // --- Eliminar producto ---
 async function delProduct(rowNumber) {
   try {
@@ -471,6 +480,7 @@ async function delAlmacen(rowNumber) {
 
   scanAdd.addEventListener("click", addProduct);
 });
+
 
 
 
