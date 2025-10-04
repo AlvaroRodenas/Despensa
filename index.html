@@ -114,16 +114,13 @@
             <input id="scan-cantidad" type="number" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Ej: 6" />
           </div>
           <!-- Campo de ubicación en el modal de producto -->
-<div class="mb-4">
-  <label for="scan-ubicacion" class="block text-sm font-medium text-gray-700">
-    Ubicación (Almacén)
-  </label>
-  <select id="scan-ubicacion" 
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm">
-    <!-- Opciones se rellenan dinámicamente con listAlmacenes("scan-ubicacion") -->
-  </select>
-</div>
-
+        <div>
+            <label for="scan-ubicacion" class="block text-gray-500 mb-1">Ubicación (Almacén)</label>
+            <select id="scan-ubicacion"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+            <!-- Opciones se rellenan dinámicamente con listAlmacenes("scan-ubicacion") -->
+            </select>
+        </div>
           <div>
             <label class="block text-gray-500 mb-1">Caducidad</label>
             <input id="scan-caducidad" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
