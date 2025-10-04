@@ -251,6 +251,96 @@ async function modProduct(rowNumber, datos) {
     showLoader(false);
   }
 }
+  // --- Eliminar producto ---
+async function delProduct(rowNumber) {
+  try {
+    showLoader(true);
+    const body = { rowNumber };
+    const res = await fetch(`${API_BASE}/producto/del`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error("Error en la API /producto/del");
+    showToast("Producto eliminado correctamente");
+    list(currentFilter);
+  } catch (err) {
+    console.error(err);
+    showToast("Error al eliminar producto");
+  } finally {
+    showLoader(false);
+  }
+}
+
+// Abrir modal al hacer clic en un producto de la lista
+inventoryBody.addEventListener("click", async (e) => {
+  const tr = e.target.closest("tr");
+  if (!tr) return;
+
+  const rowNumber = tr.dataset.rowNumber;
+  if (!rowNumber) return;
+
+  // Rellenar campos con los datos de la fila
+  document.getElementById("edit-nombre").value = tr.querySelector("td:nth-child(1)").innerText.trim();
+  document.getElementById("edit-formato").value = tr.querySelector("td:nth-child(2)").innerText.trim();
+  document.getElementById("edit-cantidad").value = tr.querySelector("td:nth-child(3)").innerText.trim();
+  document.getElementById("edit-caducidad").value = tr.querySelector("td:nth-child(4)").innerText.trim();
+
+  // Guardar rowNumber en dataset del modal
+  const editModal = document.getElementById("edit-modal");
+  editModal.dataset.rowNumber = rowNumber;
+
+  // Rellenar select de almacenes
+  await listAlmacenes("edit-ubicacion");
+
+  // Seleccionar el almacén actual (si lo tienes en la tabla)
+  const ubicacion = tr.querySelector("td:nth-child(5)").innerText.trim();
+  const select = document.getElementById("edit-ubicacion");
+  const option = [...select.options].find(opt => opt.textContent === ubicacion);
+  if (option) select.value = option.value;
+
+  // Mostrar modal
+  editModal.classList.remove("hidden");
+  editModal.classList.add("flex");
+});
+
+// Cerrar modal
+document.getElementById("edit-close").addEventListener("click", () => {
+  const editModal = document.getElementById("edit-modal");
+  editModal.classList.add("hidden");
+  editModal.classList.remove("flex");
+});
+
+// Guardar cambios
+document.getElementById("edit-save").addEventListener("click", async () => {
+  const editModal = document.getElementById("edit-modal");
+  const rowNumber = editModal.dataset.rowNumber;
+
+  const datos = {
+    Nombre: document.getElementById("edit-nombre").value,
+    Formato: document.getElementById("edit-formato").value,
+    Cantidad: document.getElementById("edit-cantidad").value,
+    Caducidad: document.getElementById("edit-caducidad").value,
+    Ubicacion: document.getElementById("edit-ubicacion").value
+  };
+
+  await modProduct(rowNumber, datos);
+
+  editModal.classList.add("hidden");
+  editModal.classList.remove("flex");
+});
+
+// Eliminar producto (con confirmación)
+document.getElementById("edit-delete").addEventListener("click", async () => {
+  const editModal = document.getElementById("edit-modal");
+  const rowNumber = editModal.dataset.rowNumber;
+
+  if (confirm("¿Seguro que quieres eliminar este producto?")) {
+    await delProduct(rowNumber);
+    editModal.classList.add("hidden");
+    editModal.classList.remove("flex");
+  }
+});
 
 // --- Gestión de Almacenes ---
 
@@ -381,6 +471,7 @@ async function delAlmacen(rowNumber) {
 
   scanAdd.addEventListener("click", addProduct);
 });
+
 
 
 
