@@ -47,13 +47,11 @@ document.addEventListener("DOMContentLoaded", () => {
     loader.classList.toggle("hidden", !show);
     loader.classList.toggle("flex", show);
   }
-
   function showToast(msg) {
     toast.querySelector("div").textContent = msg;
     toast.classList.remove("hidden");
     setTimeout(() => toast.classList.add("hidden"), 3000);
   }
-
   function setActiveFilter(activeBtn) {
     [btnFilterAll, btnFilterStock, btnFilterExpiry].forEach(btn => {
       btn.classList.remove("ring-2", "ring-offset-2", "ring-green-500");
@@ -61,6 +59,18 @@ document.addEventListener("DOMContentLoaded", () => {
     activeBtn.classList.add("ring-2", "ring-offset-2", "ring-green-500");
   }
 
+  // --- Enriquecer producto con campos calculados ---
+  function enrichProducto(p) {
+    const hoy = new Date();
+    const cad = p.Caducidad ? new Date(p.Caducidad) : null;
+    const dias = cad ? Math.ceil((cad - hoy) / (1000 * 60 * 60 * 24)) : "";
+
+    return {
+      ...p,
+      StockBajo: Number(p.Cantidad) <= Number(p.minStock || 0),
+      DiasHastaCaducidad: dias
+    };
+  }
   // --- Escanear producto ---
   async function scan() {
     try {
@@ -80,13 +90,10 @@ document.addEventListener("DOMContentLoaded", () => {
       scanUbicacion.value = "";
       scanCaducidad.value = "";
 
-      // Guardamos el código de barras en dataset
       scanModal.dataset.codigo = data.codigo_barras || codigo;
-      
-      // Rellenar el select de almacenes
+
       await listAlmacenes("scan-ubicacion");
-      
-      // Mostrar modal
+
       scanModal.classList.remove("hidden");
       scanModal.classList.add("flex");
     } catch (err) {
@@ -102,13 +109,12 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       showLoader(true);
       currentFilter = filter;
-
       const res = await fetch(`${API_BASE}/producto/list?filter=${filter}`);
       if (!res.ok) throw new Error("Error en la API /list");
       const data = await res.json();
-      
+
       inventoryBody.innerHTML = "";
-      const items = data.items || [];
+      const items = (data.items || []).map(enrichProducto);
 
       if (items.length === 0) {
         inventoryBody.innerHTML = `
@@ -120,10 +126,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Rellenar filas
       items.forEach(prod => {
         const tr = document.createElement("tr");
-        tr.dataset.rowNumber = prod.rowNumber; // guardamos rowNumber
+        tr.dataset.productoId = prod.ProductoID; // clave estable
 
         if (prod.StockBajo === true) {
           tr.className = "bg-yellow-50 hover:bg-yellow-100";
@@ -141,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <td class="px-4 py-3">${prod.Formato || "-"}</td>
           <td class="px-4 py-3">${prod.Cantidad || "-"}</td>
           <td class="px-4 py-3">${prod.Caducidad || "-"}</td>
-          <td class="px-4 py-3">${prod.Ubicacion || "-"}</td>
+          <td class="px-4 py-3">${prod.AlmacenNombre || "-"}</td>
           <td class="px-4 py-3">${prod.StockBajo === true ? "⚠️ Sí" : "No"}</td>
         `;
         inventoryBody.appendChild(tr);
@@ -165,324 +170,56 @@ document.addEventListener("DOMContentLoaded", () => {
       row.style.display = text.includes(currentSearch) ? "" : "none";
     });
   }
+  // --- Guardar producto desde modal ---
+  async function addProduct() {
+    try {
+      if (!scanCantidad.value || scanCantidad.value <= 0) {
+        showToast("La cantidad debe ser mayor que 0");
+        return;
+      }
+      if (!scanCaducidad.value) {
+        showToast("Debes indicar una fecha de caducidad");
+        return;
+      }
 
- // --- Guardar producto desde modal ---
-async function addProduct() {
-  try {
-    if (!scanCantidad.value || scanCantidad.value <= 0) {
-      showToast("La cantidad debe ser mayor que 0");
-      return;
-    }
-    if (!scanCaducidad.value) {
-      showToast("Debes indicar una fecha de caducidad");
-      return;
-    }
+      showLoader(true);
 
-    showLoader(true);
+      const body = {
+        Nombre: scanName.textContent || "",
+        Formato: scanFormato.value || "",
+        Cantidad: Number(scanCantidad.value) || 1,
+        Caducidad: scanCaducidad.value || "",
+        AlmacenID: scanUbicacion.value || "",   // usamos AlmacenID
+        minStock: 1,
+        Marca: scanBrand.textContent || "",
+        barCode: scanModal.dataset.codigo || "",
+        Imagen: scanImg.src || ""
+      };
 
-    const body = {
-      Nombre: scanName.textContent || "",
-      Formato: scanFormato.value || "",
-      Cantidad: scanCantidad.value || 1,
-      Caducidad: scanCaducidad.value || "",
-      Ubicacion: scanUbicacion.value || "",   // ahora será el rowNumber del almacén
-      MinStock: 1,
-      Marca: scanBrand.textContent || "",
-      BarCode: scanModal.dataset.codigo || "",
-      Imagen: scanImg.src || ""
-    };
-
-    console.log("Enviando a /producto/add:", body);
-
-    const res = await fetch(`${API_BASE}/producto/add`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-
-    if (!res.ok) throw new Error("Error en la API /producto/add");
-
-    showToast("Producto añadido correctamente");
-    scanModal.classList.add("hidden");
-    scanModal.classList.remove("flex");
-    list(currentFilter);
-  } catch (err) {
-    console.error(err);
-    showToast("Error al añadir producto");
-  } finally {
-    showLoader(false);
-  }
-}
-
- // --- Modificar producto ---
-async function modProduct(rowNumber, datos) {
-  try {
-    showLoader(true);
-
-    const body = {
-      rowNumber,                // fila del producto a modificar
-      Nombre: datos.Nombre,
-      Formato: datos.Formato,
-      Cantidad: datos.Cantidad,
-      Caducidad: datos.Caducidad,
-      Ubicacion: datos.Ubicacion, // rowNumber del almacén seleccionado
-      MinStock: datos.MinStock || 1,
-      Marca: datos.Marca || "",
-      BarCode: datos.BarCode || "",
-      Imagen: datos.Imagen || ""
-    };
-
-    console.log("Enviando a /producto/mod:", body);
-
-    const res = await fetch(`${API_BASE}/producto/mod`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-
-    if (!res.ok) throw new Error("Error en la API /producto/mod");
-
-    showToast("Producto modificado correctamente");
-
-    // Refrescar lista
-    list(currentFilter);
-
-    // Cerrar modal de edición
-    const editModal = document.getElementById("edit-modal");
-    editModal.classList.add("hidden");
-    editModal.classList.remove("flex");
-
-  } catch (err) {
-    console.error(err);
-    showToast("Error al modificar producto");
-  } finally {
-    showLoader(false);
-  }
-}
-
-  // --- Eliminar producto ---
-async function delProduct(rowNumber) {
-  try {
-    showLoader(true);
-    const body = { rowNumber };
-    const res = await fetch(`${API_BASE}/producto/del`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) throw new Error("Error en la API /producto/del");
-    showToast("Producto eliminado correctamente");
-    list(currentFilter);
-  } catch (err) {
-    console.error(err);
-    showToast("Error al eliminar producto");
-  } finally {
-    showLoader(false);
-  }
-}
-
-// Abrir modal al hacer clic en un producto de la lista
-inventoryBody.addEventListener("click", async (e) => {
-  const tr = e.target.closest("tr");
-  if (!tr) return;
-
-  const rowNumber = tr.dataset.rowNumber;
-  if (!rowNumber) return;
-
-  // Rellenar campos con los datos de la fila
-  document.getElementById("edit-nombre").value = tr.querySelector("td:nth-child(1)").innerText.trim();
-  document.getElementById("edit-formato").value = tr.querySelector("td:nth-child(2)").innerText.trim();
-  document.getElementById("edit-cantidad").value = tr.querySelector("td:nth-child(3)").innerText.trim();
-  document.getElementById("edit-caducidad").value = tr.querySelector("td:nth-child(4)").innerText.trim();
-
-  // Guardar rowNumber en dataset del modal
-  const editModal = document.getElementById("edit-modal");
-  editModal.dataset.rowNumber = rowNumber;
-
-  // Rellenar select de almacenes
-  await listAlmacenes("edit-ubicacion");
-
-  // Seleccionar el almacén actual (si lo tienes en la tabla)
-  const ubicacion = tr.querySelector("td:nth-child(5)").innerText.trim();
-  const select = document.getElementById("edit-ubicacion");
-  const option = [...select.options].find(opt => opt.textContent === ubicacion);
-  if (option) select.value = option.value;
-
-  // Mostrar modal
-  editModal.classList.remove("hidden");
-  editModal.classList.add("flex");
-});
-
-// Cerrar modal
-document.getElementById("edit-close").addEventListener("click", () => {
-  const editModal = document.getElementById("edit-modal");
-  editModal.classList.add("hidden");
-  editModal.classList.remove("flex");
-});
-
-// Guardar cambios
-document.getElementById("edit-save").addEventListener("click", async () => {
-  const editModal = document.getElementById("edit-modal");
-  const rowNumber = editModal.dataset.rowNumber;
-
-  const datos = {
-    Nombre: document.getElementById("edit-nombre").value,
-    Formato: document.getElementById("edit-formato").value,
-    Cantidad: document.getElementById("edit-cantidad").value,
-    Caducidad: document.getElementById("edit-caducidad").value,
-    Ubicacion: document.getElementById("edit-ubicacion").value
-  };
-
-  await modProduct(rowNumber, datos);
-
-  editModal.classList.add("hidden");
-  editModal.classList.remove("flex");
-});
-
-// Eliminar producto (con confirmación)
-document.getElementById("edit-delete").addEventListener("click", async () => {
-  const editModal = document.getElementById("edit-modal");
-  const rowNumber = editModal.dataset.rowNumber;
-
-  if (confirm("¿Seguro que quieres eliminar este producto?")) {
-    await delProduct(rowNumber);
-    editModal.classList.add("hidden");
-    editModal.classList.remove("flex");
-  }
-});
-
-// --- Gestión de Almacenes ---
-
-// --- Listar almacenes y poblar un <select> ---
-async function listAlmacenes(selectId = "scan-ubicacion") {
-  try {
-    showLoader(true);
-    const res = await fetch(`${API_BASE}/almacen/list`);
-    if (!res.ok) throw new Error("Error en la API /almacen/list");
-    const data = await res.json();
-
-    const select = document.getElementById(selectId);
-    if (select) {
-      select.innerHTML = "";
-      data.items.forEach(al => {
-        const opt = document.createElement("option");
-        opt.value = al.rowNumber;
-        opt.textContent = al.Nombre;
-        select.appendChild(opt);
+      const res = await fetch(`${API_BASE}/producto/add`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
       });
+
+      if (!res.ok) throw new Error("Error en la API /producto/add");
+
+      showToast("Producto añadido correctamente");
+
+      // Cerrar modal
+      scanModal.classList.add("hidden");
+      scanModal.classList.remove("flex");
+
+      // Refrescar listado
+      await list(currentFilter);
+
+    } catch (err) {
+      console.error(err);
+      showToast("Error al añadir producto");
+    } finally {
+      showLoader(false);
     }
-  } catch (err) {
-    console.error(err);
-    showToast("Error al listar almacenes");
-  } finally {
-    showLoader(false);
   }
-}
 
-
-// --- Añadir almacén ---
-async function addAlmacen(nombre) {
-  try {
-    showLoader(true);
-    const body = { Nombre: nombre };
-    const res = await fetch(`${API_BASE}/almacen/add`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) throw new Error("Error en la API /almacen/add");
-    showToast("Almacén añadido correctamente");
-    // Refrescar listado en el modal
-    listAlmacenes();
-  } catch (err) {
-    console.error(err);
-    showToast("Error al añadir almacén");
-  } finally {
-    showLoader(false);
-  }
-}
-
-
-// --- Modificar almacén ---
-async function modAlmacen(rowNumber, nuevoNombre) {
-  try {
-    showLoader(true);
-    const body = { rowNumber, Nombre: nuevoNombre };
-    const res = await fetch(`${API_BASE}/almacen/mod`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) throw new Error("Error en la API /almacen/mod");
-    showToast("Almacén modificado correctamente");
-    listAlmacenes();
-  } catch (err) {
-    console.error(err);
-    showToast("Error al modificar almacén");
-  } finally {
-    showLoader(false);
-  }
-}
-
-
-// --- Eliminar almacén ---
-async function delAlmacen(rowNumber) {
-  try {
-    showLoader(true);
-    const body = { rowNumber };
-    const res = await fetch(`${API_BASE}/almacen/del`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) throw new Error("Error en la API /almacen/del");
-    showToast("Almacén eliminado correctamente");
-    listAlmacenes();
-  } catch (err) {
-    console.error(err);
-    showToast("Error al eliminar almacén");
-  } finally {
-    showLoader(false);
-  }
-}
-
-
-    // --- Eventos ---
-  btnScan.addEventListener("click", scan);
-  btnList.addEventListener("click", () => {
-    list("all");
-    setActiveFilter(btnFilterAll);
-  });
-
-  btnFilterAll.addEventListener("click", () => {
-    list("all");
-    setActiveFilter(btnFilterAll);
-  });
-  btnFilterStock.addEventListener("click", () => {
-    list("stock_bajo");
-    setActiveFilter(btnFilterStock);
-  });
-  btnFilterExpiry.addEventListener("click", () => {
-    list("caduca_pronto");
-    setActiveFilter(btnFilterExpiry);
-  });
-
-  searchInput.addEventListener("input", applySearch);
-  searchClear.addEventListener("click", () => {
-    searchInput.value = "";
-    applySearch();
-  });
-
-  scanClose.addEventListener("click", () => {
-    scanModal.classList.add("hidden");
-    scanModal.classList.remove("flex");
-  });
-
-  scanAdd.addEventListener("click", addProduct);
-});
-
-
-
-
-
-
+  // --- Listar almacenes en <select> ---
+  async function listAlmacenes(selectId)
