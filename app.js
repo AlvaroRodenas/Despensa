@@ -358,6 +358,7 @@ async function list(filter = currentFilter) {
     document.getElementById("edit-nombre").value = tr.querySelector("td:nth-child(1)").innerText.trim();
     document.getElementById("edit-formato").value = tr.querySelector("td:nth-child(2)").innerText.trim();
     document.getElementById("edit-cantidad").value = tr.querySelector("td:nth-child(3)").innerText.trim();
+    document.getElementById("edit-minstock").value = prod.minStock ?? 1;
     const caducidadTexto = tr.querySelector("td:nth-child(4)").innerText.trim();
     let caducidadISO = "";
     if (caducidadTexto) {
@@ -403,7 +404,8 @@ async function list(filter = currentFilter) {
       Formato: document.getElementById("edit-formato").value,
       Cantidad: document.getElementById("edit-cantidad").value,
       Caducidad: document.getElementById("edit-caducidad").value,
-      AlmacenID: document.getElementById("edit-ubicacion").value
+      AlmacenID: document.getElementById("edit-ubicacion").value,
+      minStock: Number(document.getElementById("edit-minstock").value) || 1
     };
     await modProduct(datos);
   });
@@ -493,6 +495,7 @@ async function list(filter = currentFilter) {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
