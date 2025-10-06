@@ -319,7 +319,17 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("edit-nombre").value = tr.querySelector("td:nth-child(1)").innerText.trim();
     document.getElementById("edit-formato").value = tr.querySelector("td:nth-child(2)").innerText.trim();
     document.getElementById("edit-cantidad").value = tr.querySelector("td:nth-child(3)").innerText.trim();
-    document.getElementById("edit-caducidad").value = tr.querySelector("td:nth-child(4)").innerText.trim();
+    const caducidadTexto = tr.querySelector("td:nth-child(4)").innerText.trim();
+    let caducidadISO = "";
+    if (caducidadTexto) {
+      const partes = caducidadTexto.split(/[\/\-]/); // admite / o -
+      if (partes.length === 3) {
+        // suponiendo formato dd/mm/yyyy
+        caducidadISO = `${partes[2]}-${partes[1].padStart(2,"0")}-${partes[0].padStart(2,"0")}`;
+      }
+    }
+    document.getElementById("edit-caducidad").value = caducidadISO;
+
 
     // Guardar ProductoID en dataset del modal
     const editModal = document.getElementById("edit-modal");
@@ -434,8 +444,8 @@ document.addEventListener("DOMContentLoaded", () => {
   btnScan.addEventListener("click", scan);
   btnList.addEventListener("click", () => { list("all"); setActiveFilter(btnFilterAll); });
   btnFilterAll.addEventListener("click", () => { list("all"); setActiveFilter(btnFilterAll); });
-  btnFilterStock.addEventListener("click", () => { list("stock"); setActiveFilter(btnFilterStock); });
-  btnFilterExpiry.addEventListener("click", () => { list("expiry"); setActiveFilter(btnFilterExpiry); });
+  btnFilterStock.addEventListener("click", () => { list("stock_bajo"); setActiveFilter(btnFilterStock); });
+  btnFilterExpiry.addEventListener("click", () => { list("caduca_pronto"); setActiveFilter(btnFilterExpiry); });
   searchInput.addEventListener("input", applySearch);
   searchClear.addEventListener("click", () => { searchInput.value = ""; applySearch(); });
   scanClose.addEventListener("click", () => { scanModal.classList.add("hidden"); scanModal.classList.remove("flex"); });
@@ -444,5 +454,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
