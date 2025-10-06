@@ -73,15 +73,28 @@ function enrichProducto(p) {
     DiasHastaCaducidad: dias
   };
 }
-  // --- Aplicar filtros en frontend ---
+
+// --- Aplicar filtros en frontend ---
 function applyFilter(items, filter) {
-  if (filter === "stock") {
-    return items.filter(p => p.StockBajo === true);
-  } else if (filter === "expiry") {
-    return items.filter(p => p.DiasHastaCaducidad !== null && p.DiasHastaCaducidad <= 7);
+  switch (filter) {
+    case "stock":
+      // Solo productos con stock actual por debajo del mínimo
+      return items.filter(p => p.StockBajo === true);
+
+    case "expiry":
+      // Solo productos con fecha válida y que caducan en ≤ 7 días
+      return items.filter(p =>
+        p.DiasHastaCaducidad !== null &&
+        !isNaN(p.DiasHastaCaducidad) &&
+        p.DiasHastaCaducidad <= 7
+      );
+
+    case "all":
+    default:
+      return items;
   }
-  return items; // "all"
 }
+
   // --- Escanear producto ---
   async function scan() {
     try {
@@ -115,66 +128,77 @@ function applyFilter(items, filter) {
     }
   }
 
-  // --- Listar inventario ---
-  async function list(filter = currentFilter) {
-    try {
-      showLoader(true);
-      currentFilter = filter;
-      const res = await fetch(`${API_BASE}/producto/list?filter=${filter}`);
-      if (!res.ok) throw new Error("Error en la API /list");
-      const data = await res.json();
-      let items = (data.items || []).map(enrichProducto);
+// --- Listar inventario ---
+async function list(filter = currentFilter) {
+  try {
+    showLoader(true);
+    currentFilter = filter;
 
-      // aplicar filtro en frontend
-      items = applyFilter(items, filter);
+    const res = await fetch(`${API_BASE}/producto/list?filter=${filter}`);
+    if (!res.ok) throw new Error("Error en la API /list");
+    const data = await res.json();
 
-      inventoryBody.innerHTML = "";
-      const items = (data.items || []).map(enrichProducto);
+    // Enriquecer productos
+    let items = (data.items || []).map(enrichProducto);
 
-      if (items.length === 0) {
-        inventoryBody.innerHTML = `
-          <tr>
-            <td colspan="6" class="px-4 py-3 text-center text-gray-400">
-              No hay productos en el inventario
-            </td>
-          </tr>`;
-        return;
+    // Aplicar filtro en frontend
+    items = applyFilter(items, filter);
+
+    // Limpiar tabla
+    inventoryBody.innerHTML = "";
+
+    // Si no hay resultados
+    if (items.length === 0) {
+      inventoryBody.innerHTML = `
+        <tr>
+          <td colspan="6" class="px-4 py-3 text-center text-gray-400">
+            No hay productos en el inventario
+          </td>
+        </tr>`;
+      return;
+    }
+
+    // Pintar filas
+    items.forEach(prod => {
+      const tr = document.createElement("tr");
+      tr.dataset.productoId = prod.ProductoID; // clave estable
+
+      if (prod.StockBajo === true) {
+        tr.className = "bg-yellow-50 hover:bg-yellow-100";
+      } else if (
+        prod.DiasHastaCaducidad !== null &&
+        !isNaN(prod.DiasHastaCaducidad) &&
+        prod.DiasHastaCaducidad <= 3
+      ) {
+        tr.className = "bg-red-50 hover:bg-red-100";
+      } else {
+        tr.className = "hover:bg-gray-50";
       }
 
-      items.forEach(prod => {
-        const tr = document.createElement("tr");
-        tr.dataset.productoId = prod.ProductoID; // clave estable
+      tr.innerHTML = `
+        <td class="px-4 py-3 flex items-center gap-2">
+          ${prod.Imagen ? `<img src="${prod.Imagen}" class="w-10 h-10 object-cover rounded" />` : ""}
+          ${prod.Nombre || "-"}
+        </td>
+        <td class="px-4 py-3">${prod.Formato || "-"}</td>
+        <td class="px-4 py-3">${prod.Cantidad || "-"}</td>
+        <td class="px-4 py-3">${prod.Caducidad || "-"}</td>
+        <td class="px-4 py-3">${prod.AlmacenNombre || "-"}</td>
+        <td class="px-4 py-3">${prod.StockBajo === true ? "⚠️ Sí" : "No"}</td>
+      `;
+      inventoryBody.appendChild(tr);
+    });
 
-        if (prod.StockBajo === true) {
-          tr.className = "bg-yellow-50 hover:bg-yellow-100";
-        } else if (prod.DiasHastaCaducidad !== "" && Number(prod.DiasHastaCaducidad) <= 3) {
-          tr.className = "bg-red-50 hover:bg-red-100";
-        } else {
-          tr.className = "hover:bg-gray-50";
-        }
-
-        tr.innerHTML = `
-          <td class="px-4 py-3 flex items-center gap-2">
-            ${prod.Imagen ? `<img src="${prod.Imagen}" class="w-10 h-10 object-cover rounded" />` : ""}
-            ${prod.Nombre || "-"}
-          </td>
-          <td class="px-4 py-3">${prod.Formato || "-"}</td>
-          <td class="px-4 py-3">${prod.Cantidad || "-"}</td>
-          <td class="px-4 py-3">${prod.Caducidad || "-"}</td>
-          <td class="px-4 py-3">${prod.AlmacenNombre || "-"}</td>
-          <td class="px-4 py-3">${prod.StockBajo === true ? "⚠️ Sí" : "No"}</td>
-        `;
-        inventoryBody.appendChild(tr);
-      });
-
-      applySearch();
-    } catch (err) {
-      console.error(err);
-      showToast("Error al listar inventario");
-    } finally {
-      showLoader(false);
-    }
+    // Aplicar búsqueda
+    applySearch();
+  } catch (err) {
+    console.error(err);
+    showToast("Error al listar inventario");
+  } finally {
+    showLoader(false);
   }
+}
+
 
   // --- Búsqueda ---
   function applySearch() {
@@ -469,6 +493,7 @@ function applyFilter(items, filter) {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
