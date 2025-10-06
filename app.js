@@ -162,7 +162,8 @@ async function list(filter = currentFilter) {
     items.forEach(prod => {
       const tr = document.createElement("tr");
       tr.dataset.productoId = prod.ProductoID; // clave estable
-
+      tr.dataset.minstock = prod.minStock ?? 1;
+      
       if (prod.StockBajo === true) {
         tr.className = "bg-yellow-50 hover:bg-yellow-100";
       } else if (
@@ -358,7 +359,7 @@ async function list(filter = currentFilter) {
     document.getElementById("edit-nombre").value = tr.querySelector("td:nth-child(1)").innerText.trim();
     document.getElementById("edit-formato").value = tr.querySelector("td:nth-child(2)").innerText.trim();
     document.getElementById("edit-cantidad").value = tr.querySelector("td:nth-child(3)").innerText.trim();
-    document.getElementById("edit-minstock").value = prod.minStock ?? 1;
+    document.getElementById("edit-minstock").value = tr.dataset.minstock || 1;
     const caducidadTexto = tr.querySelector("td:nth-child(4)").innerText.trim();
     let caducidadISO = "";
     if (caducidadTexto) {
@@ -495,6 +496,7 @@ async function list(filter = currentFilter) {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
