@@ -59,18 +59,29 @@ document.addEventListener("DOMContentLoaded", () => {
     activeBtn.classList.add("ring-2", "ring-offset-2", "ring-green-500");
   }
 
-  // --- Enriquecer producto con campos calculados ---
-  function enrichProducto(p) {
-    const hoy = new Date();
-    const cad = p.Caducidad ? new Date(p.Caducidad) : null;
-    const dias = cad ? Math.ceil((cad - hoy) / (1000 * 60 * 60 * 24)) : "";
+// --- Enriquecer producto con campos calculados ---
+function enrichProducto(p) {
+  const hoy = new Date();
+  const cad = p.Caducidad ? new Date(p.Caducidad) : null;
+  const dias = cad ? Math.ceil((cad - hoy) / (1000 * 60 * 60 * 24)) : null;
 
-    return {
-      ...p,
-      StockBajo: Number(p.Cantidad) <= Number(p.minStock || 0),
-      DiasHastaCaducidad: dias
-    };
+  const minStock = Number(p.minStock ?? 1);
+
+  return {
+    ...p,
+    StockBajo: Number(p.Cantidad) < minStock,
+    DiasHastaCaducidad: dias
+  };
+}
+  // --- Aplicar filtros en frontend ---
+function applyFilter(items, filter) {
+  if (filter === "stock") {
+    return items.filter(p => p.StockBajo === true);
+  } else if (filter === "expiry") {
+    return items.filter(p => p.DiasHastaCaducidad !== null && p.DiasHastaCaducidad <= 7);
   }
+  return items; // "all"
+}
   // --- Escanear producto ---
   async function scan() {
     try {
@@ -112,6 +123,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch(`${API_BASE}/producto/list?filter=${filter}`);
       if (!res.ok) throw new Error("Error en la API /list");
       const data = await res.json();
+      let items = (data.items || []).map(enrichProducto);
+
+      // aplicar filtro en frontend
+      items = applyFilter(items, filter);
 
       inventoryBody.innerHTML = "";
       const items = (data.items || []).map(enrichProducto);
@@ -444,8 +459,8 @@ document.addEventListener("DOMContentLoaded", () => {
   btnScan.addEventListener("click", scan);
   btnList.addEventListener("click", () => { list("all"); setActiveFilter(btnFilterAll); });
   btnFilterAll.addEventListener("click", () => { list("all"); setActiveFilter(btnFilterAll); });
-  btnFilterStock.addEventListener("click", () => { list("stock_bajo"); setActiveFilter(btnFilterStock); });
-  btnFilterExpiry.addEventListener("click", () => { list("caduca_pronto"); setActiveFilter(btnFilterExpiry); });
+  btnFilterStock.addEventListener("click", () => { list("stock"); setActiveFilter(btnFilterStock); });
+  btnFilterExpiry.addEventListener("click", () => { list("expiry"); setActiveFilter(btnFilterExpiry); });
   searchInput.addEventListener("input", applySearch);
   searchClear.addEventListener("click", () => { searchInput.value = ""; applySearch(); });
   scanClose.addEventListener("click", () => { scanModal.classList.add("hidden"); scanModal.classList.remove("flex"); });
@@ -454,6 +469,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
