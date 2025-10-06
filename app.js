@@ -221,5 +221,228 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- Listar almacenes en <select> ---
-  async function listAlmacenes(selectId)
+    // --- Listar almacenes en <select> ---
+  async function listAlmacenes(selectId = "scan-ubicacion") {
+    try {
+      showLoader(true);
+      const res = await fetch(`${API_BASE}/almacen/list`);
+      if (!res.ok) throw new Error("Error en la API /almacen/list");
+      const data = await res.json();
+
+      const select = document.getElementById(selectId);
+      if (select) {
+        select.innerHTML = "";
+        (data.items || []).forEach(al => {
+          const opt = document.createElement("option");
+          opt.value = al.AlmacenID;   // usamos AlmacenID
+          opt.textContent = al.Nombre;
+          select.appendChild(opt);
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Error al listar almacenes");
+    } finally {
+      showLoader(false);
+    }
+  }
+
+  // --- Modificar producto ---
+  async function modProduct(datos) {
+    try {
+      showLoader(true);
+      const body = {
+        ProductoID: datos.ProductoID,
+        Nombre: datos.Nombre,
+        Formato: datos.Formato,
+        Cantidad: datos.Cantidad,
+        Caducidad: datos.Caducidad,
+        AlmacenID: datos.AlmacenID,
+        minStock: datos.minStock ?? 1,
+        Marca: datos.Marca || "",
+        barCode: datos.barCode || "",
+        Imagen: datos.Imagen || ""
+      };
+
+      const res = await fetch(`${API_BASE}/producto/mod`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error("Error en la API /producto/mod");
+
+      showToast("Producto modificado correctamente");
+      await list(currentFilter);
+
+      // Cerrar modal de edición
+      const editModal = document.getElementById("edit-modal");
+      editModal.classList.add("hidden");
+      editModal.classList.remove("flex");
+    } catch (err) {
+      console.error(err);
+      showToast("Error al modificar producto");
+    } finally {
+      showLoader(false);
+    }
+  }
+
+  // --- Eliminar producto ---
+  async function delProduct(productoId) {
+    try {
+      showLoader(true);
+      const body = { ProductoID: productoId };
+      const res = await fetch(`${API_BASE}/producto/del`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error("Error en la API /producto/del");
+
+      showToast("Producto eliminado correctamente");
+      await list(currentFilter);
+    } catch (err) {
+      console.error(err);
+      showToast("Error al eliminar producto");
+    } finally {
+      showLoader(false);
+    }
+  }
+
+  // --- Eventos de edición ---
+  inventoryBody.addEventListener("click", async (e) => {
+    const tr = e.target.closest("tr");
+    if (!tr) return;
+    const productoId = tr.dataset.productoId;
+    if (!productoId) return;
+
+    // Rellenar campos con los datos de la fila
+    document.getElementById("edit-nombre").value = tr.querySelector("td:nth-child(1)").innerText.trim();
+    document.getElementById("edit-formato").value = tr.querySelector("td:nth-child(2)").innerText.trim();
+    document.getElementById("edit-cantidad").value = tr.querySelector("td:nth-child(3)").innerText.trim();
+    document.getElementById("edit-caducidad").value = tr.querySelector("td:nth-child(4)").innerText.trim();
+
+    // Guardar ProductoID en dataset del modal
+    const editModal = document.getElementById("edit-modal");
+    editModal.dataset.productoId = productoId;
+
+    // Rellenar select de almacenes
+    await listAlmacenes("edit-ubicacion");
+
+    // Seleccionar el almacén actual
+    const ubicacion = tr.querySelector("td:nth-child(5)").innerText.trim();
+    const select = document.getElementById("edit-ubicacion");
+    const option = [...select.options].find(opt => opt.textContent === ubicacion);
+    if (option) select.value = option.value;
+
+    // Mostrar modal
+    editModal.classList.remove("hidden");
+    editModal.classList.add("flex");
+  });
+
+  document.getElementById("edit-close").addEventListener("click", () => {
+    const editModal = document.getElementById("edit-modal");
+    editModal.classList.add("hidden");
+    editModal.classList.remove("flex");
+  });
+
+  document.getElementById("edit-save").addEventListener("click", async () => {
+    const editModal = document.getElementById("edit-modal");
+    const productoId = editModal.dataset.productoId;
+    const datos = {
+      ProductoID: productoId,
+      Nombre: document.getElementById("edit-nombre").value,
+      Formato: document.getElementById("edit-formato").value,
+      Cantidad: document.getElementById("edit-cantidad").value,
+      Caducidad: document.getElementById("edit-caducidad").value,
+      AlmacenID: document.getElementById("edit-ubicacion").value
+    };
+    await modProduct(datos);
+  });
+
+  document.getElementById("edit-delete").addEventListener("click", async () => {
+    const editModal = document.getElementById("edit-modal");
+    const productoId = editModal.dataset.productoId;
+    if (confirm("¿Seguro que quieres eliminar este producto?")) {
+      await delProduct(productoId);
+      editModal.classList.add("hidden");
+      editModal.classList.remove("flex");
+    }
+  });
+
+  // --- Almacenes: añadir, modificar, eliminar ---
+  async function addAlmacen(nombre) {
+    try {
+      showLoader(true);
+      const body = { Nombre: nombre };
+      const res = await fetch(`${API_BASE}/almacen/add`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error("Error en la API /almacen/add");
+      showToast("Almacén añadido correctamente");
+      await listAlmacenes();
+    } catch (err) {
+      console.error(err);
+      showToast("Error al añadir almacén");
+    } finally {
+      showLoader(false);
+    }
+  }
+
+  async function modAlmacen(almacenId, nuevoNombre) {
+    try {
+      showLoader(true);
+      const body = { AlmacenID: almacenId, Nombre: nuevoNombre };
+      const res = await fetch(`${API_BASE}/almacen/mod`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error("Error en la API /almacen/mod");
+      showToast("Almacén modificado correctamente");
+      await listAlmacenes();
+    } catch (err) {
+      console.error(err);
+      showToast("Error al modificar almacén");
+    } finally {
+      showLoader(false);
+    }
+  }
+
+  async function delAlmacen(almacenId) {
+    try {
+      showLoader(true);
+      const body = { AlmacenID: almacenId };
+      const res = await fetch(`${API_BASE}/almacen/del`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error("Error en la API /almacen/del");
+      showToast("Almacén eliminado correctamente");
+      await listAlmacenes();
+    } catch (err) {
+      console.error(err);
+      showToast("Error al eliminar almacén");
+    } finally {
+      showLoader(false);
+    }
+  }
+
+  // --- Eventos principales ---
+  btnScan.addEventListener("click", scan);
+  btnList.addEventListener("click", () => { list("all"); setActiveFilter(btnFilterAll); });
+  btnFilterAll.addEventListener("click", () => { list("all"); setActiveFilter(btnFilterAll); });
+  btnFilterStock.addEventListener("click", () => { list("stock"); setActiveFilter(btnFilterStock); });
+  btnFilterExpiry.addEventListener("click", () => { list("expiry"); setActiveFilter(btnFilterExpiry); });
+  searchInput.addEventListener("input", applySearch);
+  searchClear.addEventListener("click", () => { searchInput.value = ""; applySearch(); });
+  scanClose.addEventListener("click", () => { scanModal.classList.add("hidden"); scanModal.classList.remove("flex"); });
+  scanAdd.addEventListener("click", addProduct);
+
+  // --- Inicialización ---
+  list("all");
+});
+
+
