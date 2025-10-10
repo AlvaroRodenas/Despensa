@@ -191,6 +191,21 @@
     </div>
   </div>
 </div>
+<!-- Modal de gestión de almacenes -->
+<div id="almacen-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+    <h2 class="text-xl font-semibold mb-4">Gestión de Almacenes</h2>
+    <ul id="almacen-list" class="mb-4 space-y-2"></ul>
+    <div class="flex gap-2">
+      <input id="almacen-nombre" type="text" placeholder="Nuevo almacén"
+             class="flex-1 border rounded px-2 py-1" />
+      <button id="almacen-add" class="bg-blue-500 text-white px-3 py-1 rounded">Añadir</button>
+    </div>
+    <div class="mt-4 text-right">
+      <button id="almacen-close" class="bg-gray-300 px-3 py-1 rounded">Cerrar</button>
+    </div>
+  </div>
+</div>
 
   <!-- Lógica API separada -->
   <script src="app.js"></script>
