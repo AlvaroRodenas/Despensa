@@ -481,6 +481,37 @@ async function list(filter = currentFilter) {
       showLoader(false);
     }
   }
+  /*modal almacenes*/
+  async function renderAlmacenes() {
+  try {
+    showLoader(true);
+    const res = await fetch(`${API_BASE}/almacen/list`);
+    if (!res.ok) throw new Error("Error en la API /almacen/list");
+    const data = await res.json();
+
+    const ul = document.getElementById("almacen-list");
+    ul.innerHTML = "";
+
+    (data.items || []).forEach(al => {
+      const li = document.createElement("li");
+      li.className = "flex justify-between items-center border px-2 py-1 rounded";
+      li.innerHTML = `
+        <span>${al.Nombre}</span>
+        <div class="flex gap-2">
+          <button class="text-blue-600" data-id="${al.AlmacenID}" data-action="edit">✏️</button>
+          <button class="text-red-600" data-id="${al.AlmacenID}" data-action="delete">🗑️</button>
+        </div>
+      `;
+      ul.appendChild(li);
+    });
+  } catch (err) {
+    console.error(err);
+    showToast("Error al listar almacenes");
+  } finally {
+    showLoader(false);
+  }
+}
+
 
   // --- Eventos principales ---
   btnScan.addEventListener("click", scan);
@@ -492,10 +523,51 @@ async function list(filter = currentFilter) {
   searchClear.addEventListener("click", () => { searchInput.value = ""; applySearch(); });
   scanClose.addEventListener("click", () => { scanModal.classList.add("hidden"); scanModal.classList.remove("flex"); });
   scanAdd.addEventListener("click", addProduct);
+  // --- Eventos de gestión de almacenes ---
+document.getElementById("btn-almacenes").addEventListener("click", async () => {
+  await renderAlmacenes();
+  document.getElementById("almacen-modal").classList.remove("hidden");
+  document.getElementById("almacen-modal").classList.add("flex");
+});
+
+document.getElementById("almacen-close").addEventListener("click", () => {
+  document.getElementById("almacen-modal").classList.add("hidden");
+  document.getElementById("almacen-modal").classList.remove("flex");
+});
+
+document.getElementById("almacen-add").addEventListener("click", async () => {
+  const nombre = document.getElementById("almacen-nombre").value.trim();
+  if (!nombre) return;
+  await addAlmacen(nombre);
+  document.getElementById("almacen-nombre").value = "";
+  await renderAlmacenes();
+});
+
+document.getElementById("almacen-list").addEventListener("click", async (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+
+  if (action === "edit") {
+    const nuevoNombre = prompt("Nuevo nombre del almacén:");
+    if (nuevoNombre) {
+      await modAlmacen(id, nuevoNombre);
+      await renderAlmacenes();
+    }
+  } else if (action === "delete") {
+    if (confirm("¿Eliminar este almacén?")) {
+      await delAlmacen(id);
+      await renderAlmacenes();
+    }
+  }
+});
+
 
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
