@@ -685,8 +685,6 @@ document.getElementById("edit-close").addEventListener("click", () => {
   }
 });
 
-
-
   btnList.addEventListener("click", () => { list("all"); setActiveFilter(btnFilterAll); });
   btnFilterAll.addEventListener("click", () => { list("all"); setActiveFilter(btnFilterAll); });
   btnFilterStock.addEventListener("click", () => { list("stock"); setActiveFilter(btnFilterStock); });
@@ -719,7 +717,7 @@ document.getElementById("btn-almacenes").addEventListener("click", async () => {
     openModal("almacen-modal");
 
     // Pintar "Cargando..." y luego la lista
-    await listAlmacenes("almacen-list");
+    await renderAlmacenes("almacen-list");
 
   } catch (err) {
     console.error("Error al abrir almacenes:", err);
@@ -754,12 +752,17 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
       await renderAlmacenes();
     }
   }
+  document.getElementById("almacen-close").addEventListener("click", () => {
+  closeModal("almacen-modal");
+});
+
 });
 
 
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
