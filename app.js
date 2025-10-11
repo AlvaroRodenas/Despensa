@@ -661,17 +661,17 @@ document.getElementById("btn-fetch-barcode").addEventListener("click", async () 
 
     // Rellenar campos del modal con la respuesta
     const scanImg = document.getElementById("scan-img");
-    scanImg.src = data.imagen || "";
-    scanImg.classList.toggle("hidden", !data.imagen);
+    scanImg.src = data.Imagen || "";
+    scanImg.classList.toggle("hidden", !data.Imagen);
 
-    document.getElementById("scan-nombre").value = data.nombre || "";
-    document.getElementById("scan-brand").value = data.marca || "";
-    document.getElementById("scan-formato").value = data.cantidad || "";
+    document.getElementById("scan-nombre").value = data.Nombre || "";
+    document.getElementById("scan-brand").value = data.Marca || "";
+    document.getElementById("scan-formato").value = data.Cantidad || "";
     document.getElementById("scan-cantidad").value = 1;
     document.getElementById("scan-ubicacion").value = "";
     document.getElementById("scan-caducidad").value = "";
 
-    scanModal.dataset.codigo = data.codigo_barras || codigo;
+    scanModal.dataset.codigo = data.barCode || codigo;
 
     await listAlmacenes("scan-ubicacion");
 
@@ -753,6 +753,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
