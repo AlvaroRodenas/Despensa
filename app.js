@@ -123,6 +123,12 @@ function applyFilter(items, filter) {
   }
 }
 async function iniciarEscaneo() {
+  // Verificar soporte de cámara
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showToast("Este dispositivo/navegador no soporta cámara. Introduce el código manualmente.");
+    throw new Error("Cámara no soportada");
+  }
+
   return new Promise((resolve, reject) => {
     // Abrir modal de cámara
     openModal("camera-modal");
@@ -166,7 +172,6 @@ async function iniciarEscaneo() {
 }
 
 
-  // --- Escanear producto (adaptado al nuevo modal) ---
 // --- Escanear producto (adaptado al nuevo modal) ---
 async function scan() {
   try {
@@ -826,3 +831,4 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
