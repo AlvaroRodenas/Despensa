@@ -123,10 +123,48 @@ function applyFilter(items, filter) {
   }
 }
 async function iniciarEscaneo() {
-  // Aquí iría la integración con tu librería de escaneo (ej. QuaggaJS, ZXing, etc.)
-  // De momento, para pruebas, puedes simular un código fijo:
-  return "8480000109088";
+  return new Promise((resolve, reject) => {
+    // Abrir modal de cámara
+    openModal("camera-modal");
+
+    Quagga.init({
+      inputStream: {
+        type: "LiveStream",
+        constraints: {
+          facingMode: "environment" // cámara trasera
+        },
+        target: document.querySelector('#camera-stream')
+      },
+      decoder: {
+        readers: ["ean_reader", "upc_reader", "code_128_reader"]
+      }
+    }, err => {
+      if (err) {
+        console.error("Error al iniciar Quagga:", err);
+        closeModal("camera-modal");
+        reject(err);
+        return;
+      }
+      Quagga.start();
+    });
+
+    // Cuando detecta un código
+    Quagga.onDetected(result => {
+      const code = result.codeResult.code;
+      Quagga.stop();
+      closeModal("camera-modal");
+      resolve(code);
+    });
+
+    // Si el usuario cierra manualmente el modal
+    document.getElementById("camera-close").addEventListener("click", () => {
+      Quagga.stop();
+      closeModal("camera-modal");
+      reject(new Error("Escaneo cancelado por el usuario"));
+    }, { once: true });
+  });
 }
+
 
   // --- Escanear producto (adaptado al nuevo modal) ---
 // --- Escanear producto (adaptado al nuevo modal) ---
@@ -706,21 +744,34 @@ async function modAlmacen(id) {
   searchClear.addEventListener("click", () => { searchInput.value = ""; applySearch(); });
   scanClose.addEventListener("click", () => closeModal("scan-modal"));
   scanAdd.addEventListener("click", addProduct);
-// Escanear desde el botón del modal
 document.getElementById("btn-scan-barcode").addEventListener("click", async () => {
   try {
-    const codigo = await iniciarEscaneo(); // tu función de escaneo real o simulada
-    if (codigo) {
-      document.getElementById("scan-barcode").value = codigo;
-      showToast("Código escaneado: " + codigo);
-      // Disparar el mismo evento que el botón lupa
-      document.getElementById("btn-fetch-barcode").click();
-    }
+    const codigo = await iniciarEscaneo(); // abre modal + espera detección
+    document.getElementById("scan-barcode").value = codigo;
+    fetchAndFillByBarcode(); // tu flujo actual de la lupa
   } catch (err) {
-    console.error(err);
-    showToast("Error al escanear código");
+    console.error("Error en el escaneo:", err);
+    showToast("No se pudo leer el código de barras");
   }
 });
+
+});
+
+// Al detectar un código
+Quagga.onDetected(result => {
+  const code = result.codeResult.code;
+  document.getElementById("scan-barcode").value = code;
+  fetchAndFillByBarcode(); // tu función de la lupa
+  Quagga.stop();
+  closeModal("camera-modal");
+});
+
+// Cerrar modal manualmente
+document.getElementById("camera-close").addEventListener("click", () => {
+  Quagga.stop();
+  closeModal("camera-modal");
+});
+
 
 
   // --- Eventos de gestión de almacenes ---
@@ -775,31 +826,3 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
