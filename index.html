@@ -90,50 +90,92 @@
     <div class="bg-gray-900 text-white text-sm px-4 py-3 rounded-lg shadow">Mensaje</div>
   </div>
 
-  <!-- Modal escaneo -->
-  <div id="scan-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-2 sm:p-0">
-    <div class="bg-white w-full h-full sm:h-auto sm:w-full sm:max-w-md rounded-xl shadow-lg overflow-y-auto">
-      <div class="px-5 py-4 border-b">
-        <h3 class="text-lg font-semibold">Producto escaneado</h3>
+  <!-- Modal de alta de producto -->
+<div id="scan-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-2 sm:p-0">
+  <div class="bg-white w-full h-full sm:h-auto sm:w-full sm:max-w-md rounded-xl shadow-lg overflow-y-auto">
+    <div class="px-5 py-4 border-b">
+      <h3 class="text-lg font-semibold">Añadir producto</h3>
+    </div>
+    <div class="px-5 py-4 space-y-3 text-sm">
+
+      <!-- Escanear código -->
+      <div>
+        <button id="btn-scan-barcode" class="w-full bg-indigo-500 text-white px-4 py-2 rounded-lg">
+          📷 Escanear código de barras
+        </button>
       </div>
-      <div class="px-5 py-4 space-y-2 text-sm">
-        <div class="flex items-center gap-3">
-          <img id="scan-img" src="" alt="Imagen producto" class="w-16 h-16 object-cover rounded-lg bg-gray-100" />
-          <div>
-            <div id="scan-name" class="font-medium">Nombre</div>
-            <div id="scan-brand" class="text-gray-500">Marca</div>
-            <div id="scan-category" class="text-gray-500">Categoría</div>
-          </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-          <div>
-            <label class="block text-gray-500 mb-1">Formato</label>
-            <input id="scan-formato" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Ej: 1 l" />
-          </div>
-          <div>
-            <label class="block text-gray-500 mb-1">Cantidad</label>
-            <input id="scan-cantidad" type="number" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Ej: 6" />
-          </div>
-          <!-- Campo de ubicación en el modal de producto -->
+
+      <!-- Teclear código -->
+      <div>
+        <label for="scan-barcode" class="block text-gray-500 mb-1">Código de barras (opcional)</label>
+        <input id="scan-barcode" type="text" placeholder="Introduce código de barras"
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+      </div>
+
+      <!-- Nombre -->
+      <div>
+        <label for="scan-nombre" class="block text-gray-500 mb-1">Nombre</label>
+        <input id="scan-nombre" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+      </div>
+
+      <!-- Marca -->
+      <div>
+        <label for="scan-brand" class="block text-gray-500 mb-1">Marca</label>
+        <input id="scan-brand" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+      </div>
+
+      <!-- Formato y Cantidad -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-            <label for="scan-ubicacion" class="block text-gray-500 mb-1">Ubicación (Almacén)</label>
-            <select id="scan-ubicacion"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-            <!-- Opciones se rellenan dinámicamente con listAlmacenes("scan-ubicacion") -->
-            </select>
+          <label for="scan-formato" class="block text-gray-500 mb-1">Formato</label>
+          <input id="scan-formato" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Ej: 1 l" />
         </div>
-          <div>
-            <label class="block text-gray-500 mb-1">Caducidad</label>
-            <input id="scan-caducidad" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-          </div>
+        <div>
+          <label for="scan-cantidad" class="block text-gray-500 mb-1">Cantidad</label>
+          <input id="scan-cantidad" type="number" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Ej: 6" />
         </div>
       </div>
-      <div class="px-5 py-4 border-t flex flex-col sm:flex-row justify-end gap-3">
-        <button id="scan-close" class="w-full sm:w-auto px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-sm">Cerrar</button>
-        <button id="scan-add" class="w-full sm:w-auto px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm">Guardar en inventario</button>
+
+      <!-- Caducidad -->
+      <div>
+        <label for="scan-caducidad" class="block text-gray-500 mb-1">Caducidad</label>
+        <input id="scan-caducidad" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+      </div>
+
+      <!-- Ubicación -->
+      <div>
+        <label for="scan-ubicacion" class="block text-gray-500 mb-1">Ubicación (Almacén)</label>
+        <select id="scan-ubicacion" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+          <!-- Opciones dinámicas con listAlmacenes("scan-ubicacion") -->
+        </select>
+      </div>
+
+      <!-- Stock mínimo -->
+      <div>
+        <label for="scan-minstock" class="block text-gray-500 mb-1">Stock mínimo</label>
+        <input id="scan-minstock" type="number" min="0" value="1"
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+      </div>
+
+      <!-- Imagen opcional -->
+      <div>
+        <img id="scan-img" src="" alt="Imagen producto"
+             class="w-24 h-24 object-cover rounded-lg bg-gray-100 hidden" />
       </div>
     </div>
+
+    <!-- Botones -->
+    <div class="px-5 py-4 border-t flex flex-col sm:flex-row justify-end gap-3">
+      <button id="scan-close" class="w-full sm:w-auto px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-sm">
+        Cancelar
+      </button>
+      <button id="scan-add" class="w-full sm:w-auto px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm">
+        Guardar en inventario
+      </button>
+    </div>
   </div>
+</div>
+
   
   <!-- Modal de edición de producto -->
 <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
