@@ -644,8 +644,7 @@ document.getElementById("edit-close").addEventListener("click", () => {
   // Abrir modal de alta
   openModal("scan-modal");
 });
-  // Botón para consultar la API /scan con el valor del campo scan-barcode
-document.getElementById("btn-fetch-barcode").addEventListener("click", async () => {
+ document.getElementById("btn-fetch-barcode").addEventListener("click", async () => {
   try {
     const codigo = document.getElementById("scan-barcode").value.trim();
     if (!codigo) {
@@ -659,31 +658,36 @@ document.getElementById("btn-fetch-barcode").addEventListener("click", async () 
     if (!res.ok) throw new Error("Error en la API /scan");
     const data = await res.json();
 
+    console.log("Respuesta API /scan:", data); // 👈 depuración
+
+    const scanModal = document.getElementById("scan-modal");
+
     // Rellenar campos del modal con la respuesta
     const scanImg = document.getElementById("scan-img");
-    scanImg.src = data.Imagen || "";
-    scanImg.classList.toggle("hidden", !data.Imagen);
+    scanImg.src = data.Imagen || data.imagen || "";
+    scanImg.classList.toggle("hidden", !(data.Imagen || data.imagen));
 
-    document.getElementById("scan-nombre").value = data.Nombre || "";
-    document.getElementById("scan-brand").value = data.Marca || "";
-    document.getElementById("scan-formato").value = data.Formato || "";
+    document.getElementById("scan-nombre").value   = data.Nombre || "";
+    document.getElementById("scan-brand").value    = data.Marca  || "";
+    document.getElementById("scan-formato").value  = data.Formato || "";
     document.getElementById("scan-cantidad").value = 1;
-    document.getElementById("scan-ubicacion").value = "";
-    document.getElementById("scan-caducidad").value = "";
+    document.getElementById("scan-ubicacion").value= "";
+    document.getElementById("scan-caducidad").value= "";
 
-    scanModal.dataset.codigo = data.barCode || codigo;
+    scanModal.dataset.codigo = data.barCode || data.codigo || codigo;
 
     await listAlmacenes("scan-ubicacion");
 
     showToast("Datos cargados desde la API");
 
   } catch (err) {
-    console.error(err);
+    console.error("Error en btn-fetch-barcode:", err);
     showToast("Error al consultar la API /scan");
   } finally {
     showLoader(false);
   }
 });
+
 
 
   btnList.addEventListener("click", () => { list("all"); setActiveFilter(btnFilterAll); });
@@ -753,6 +757,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
