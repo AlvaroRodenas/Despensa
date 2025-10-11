@@ -94,39 +94,60 @@ function applyFilter(items, filter) {
       return items;
   }
 }
+async function iniciarEscaneo() {
+  // Aquí iría la integración con tu librería de escaneo (ej. QuaggaJS, ZXing, etc.)
+  // De momento, para pruebas, puedes simular un código fijo:
+  return "8480000109088";
+}
 
-  // --- Escanear producto ---
-  async function scan() {
-    try {
-      showLoader(true);
-      const codigo = barcodeInput?.value.trim() || "8480000109088";
-      const res = await fetch(`${API_BASE}/producto/scan?codigo_barras=${codigo}`);
-      if (!res.ok) throw new Error("Error en la API /scan");
-      const data = await res.json();
+  // --- Escanear producto (adaptado al nuevo modal) ---
+async function scan() {
+  try {
+    showLoader(true);
 
-      // Rellenar modal
-      scanImg.src = data.imagen || "";
-      scanName.textContent = data.nombre || "Sin nombre";
-      scanBrand.textContent = data.marca || "";
-      scanCategory.textContent = data.categoria || "";
-      scanFormato.value = data.cantidad || "";
-      scanCantidad.value = 1;
-      scanUbicacion.value = "";
-      scanCaducidad.value = "";
+    // Leer código desde input del dashboard o usar el del modal
+    const codigo = document.getElementById("barcode-input")?.value.trim()
+                || document.getElementById("scan-barcode")?.value.trim();
 
-      scanModal.dataset.codigo = data.codigo_barras || codigo;
-
-      await listAlmacenes("scan-ubicacion");
-
-      scanModal.classList.remove("hidden");
-      scanModal.classList.add("flex");
-    } catch (err) {
-      console.error(err);
-      showToast("Error al escanear producto");
-    } finally {
-      showLoader(false);
+    if (!codigo) {
+      showToast("Introduce o escanea un código de barras");
+      return;
     }
+
+    const res = await fetch(`${API_BASE}/producto/scan?codigo_barras=${codigo}`);
+    if (!res.ok) throw new Error("Error en la API /scan");
+    const data = await res.json();
+
+    // Rellenar modal con datos de la API
+    document.getElementById("scan-img").src = data.imagen || "";
+    document.getElementById("scan-img").classList.toggle("hidden", !data.imagen);
+
+    document.getElementById("scan-nombre").value = data.nombre || "";
+    document.getElementById("scan-brand").value = data.marca || "";
+    document.getElementById("scan-formato").value = data.cantidad || "";
+
+    document.getElementById("scan-cantidad").value = 1;
+    document.getElementById("scan-ubicacion").value = "";
+    document.getElementById("scan-caducidad").value = "";
+
+    // Guardar el código en dataset y en el input
+    scanModal.dataset.codigo = data.codigo_barras || codigo;
+    document.getElementById("scan-barcode").value = data.codigo_barras || codigo;
+
+    await listAlmacenes("scan-ubicacion");
+
+    // Mostrar modal
+    scanModal.classList.remove("hidden");
+    scanModal.classList.add("flex");
+
+  } catch (err) {
+    console.error(err);
+    showToast("Error al escanear producto");
+  } finally {
+    showLoader(false);
   }
+}
+
 
 // --- Listar inventario ---
 async function list(filter = currentFilter) {
@@ -233,6 +254,7 @@ async function addProduct() {
     const marca = document.getElementById("scan-brand").value.trim();
     const barCode = document.getElementById("scan-barcode").value.trim();
     const imagen = document.getElementById("scan-img").src || "";
+    
 
     // 🔎 Validaciones
     if (!nombre) {
@@ -570,6 +592,19 @@ async function addProduct() {
   searchClear.addEventListener("click", () => { searchInput.value = ""; applySearch(); });
   scanClose.addEventListener("click", () => { scanModal.classList.add("hidden"); scanModal.classList.remove("flex"); });
   scanAdd.addEventListener("click", addProduct);
+  document.getElementById("btn-scan-barcode").addEventListener("click", async () => {
+  try {
+    const codigo = await iniciarEscaneo(); // tu función de escaneo
+    if (codigo) {
+      document.getElementById("scan-barcode").value = codigo;
+      showToast("Código escaneado: " + codigo);
+    }
+  } catch (err) {
+    console.error(err);
+    showToast("Error al escanear código");
+  }
+});
+
   // --- Eventos de gestión de almacenes ---
 document.getElementById("btn-almacenes").addEventListener("click", async () => {
   await renderAlmacenes();
@@ -614,6 +649,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
