@@ -221,56 +221,63 @@ function formatFecha(fechaISO) {
       row.style.display = text.includes(currentSearch) ? "" : "none";
     });
   }
-  // --- Guardar producto desde modal ---
-  async function addProduct() {
-    try {
-      if (!scanCantidad.value || scanCantidad.value <= 0) {
-        showToast("La cantidad debe ser mayor que 0");
-        return;
-      }
-      if (!scanCaducidad.value) {
-        showToast("Debes indicar una fecha de caducidad");
-        return;
-      }
-
-      showLoader(true);
-
-      const body = {
-        Nombre: scanName.textContent || "",
-        Formato: scanFormato.value || "",
-        Cantidad: Number(scanCantidad.value) || 1,
-        Caducidad: scanCaducidad.value || "",
-        AlmacenID: scanUbicacion.value || "",   // usamos AlmacenID
-        minStock: 1,
-        Marca: scanBrand.textContent || "",
-        barCode: scanModal.dataset.codigo || "",
-        Imagen: scanImg.src || ""
-      };
-
-      const res = await fetch(`${API_BASE}/producto/add`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-
-      if (!res.ok) throw new Error("Error en la API /producto/add");
-
-      showToast("Producto añadido correctamente");
-
-      // Cerrar modal
-      scanModal.classList.add("hidden");
-      scanModal.classList.remove("flex");
-
-      // Refrescar listado
-      await list(currentFilter);
-
-    } catch (err) {
-      console.error(err);
-      showToast("Error al añadir producto");
-    } finally {
-      showLoader(false);
+// --- Guardar producto desde modal ---
+async function addProduct() {
+  try {
+    if (!scanCantidad.value || scanCantidad.value <= 0) {
+      showToast("La cantidad debe ser mayor que 0");
+      return;
     }
+    if (!scanCaducidad.value) {
+      showToast("Debes indicar una fecha de caducidad");
+      return;
+    }
+
+    showLoader(true);
+
+    // Normalizar fecha a ISO (yyyy-mm-dd) para consistencia
+    const caducidad = scanCaducidad.value;
+    const caducidadISO = caducidad
+      ? new Date(caducidad).toISOString().split("T")[0]
+      : "";
+
+    const body = {
+      Nombre: scanName.textContent.trim() || "",
+      Formato: scanFormato.value.trim() || "",
+      Cantidad: Number(scanCantidad.value) || 1,
+      Caducidad: caducidadISO,
+      AlmacenID: scanUbicacion.value || "",
+      minStock: Number(document.getElementById("scan-minstock")?.value) || 1,
+      Marca: scanBrand.textContent.trim() || "",
+      CodigoBarras: scanModal.dataset.codigo || "", // usa el nombre real de la hoja
+      Imagen: scanImg.src || ""
+    };
+
+    const res = await fetch(`${API_BASE}/producto/add`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) throw new Error("Error en la API /producto/add");
+
+    showToast("Producto añadido correctamente");
+
+    // Cerrar modal
+    scanModal.classList.add("hidden");
+    scanModal.classList.remove("flex");
+
+    // Refrescar listado
+    await list(currentFilter);
+
+  } catch (err) {
+    console.error(err);
+    showToast("Error al añadir producto");
+  } finally {
+    showLoader(false);
   }
+}
+
 
     // --- Listar almacenes en <select> ---
   async function listAlmacenes(selectId = "scan-ubicacion") {
@@ -410,17 +417,20 @@ function formatFecha(fechaISO) {
   document.getElementById("edit-save").addEventListener("click", async () => {
     const editModal = document.getElementById("edit-modal");
     const productoId = editModal.dataset.productoId;
+    const caducidadInput = document.getElementById("edit-caducidad").value;
+    
     const datos = {
       ProductoID: productoId,
       Nombre: document.getElementById("edit-nombre").value,
       Formato: document.getElementById("edit-formato").value,
       Cantidad: document.getElementById("edit-cantidad").value || 1,
-      Caducidad: document.getElementById("edit-caducidad").value,
+      Caducidad: caducidadInput
+      ? new Date(caducidadInput).toISOString().split("T")[0]
+      : "",
       AlmacenID: document.getElementById("edit-ubicacion").value,
       minStock: Number(document.getElementById("edit-minstock").value) || 1
     };
-    const caducidad = document.getElementById("edit-caducidad").value;
-    datos.Caducidad = caducidad ? new Date(caducidad).toISOString().split("T")[0] : "";
+    
     await modProduct(datos);
   
   });
@@ -581,6 +591,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
