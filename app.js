@@ -58,6 +58,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     activeBtn.classList.add("ring-2", "ring-offset-2", "ring-green-500");
   }
+// --- Utilidades para modales ---
+function openModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
+}
+
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+}
 
 // --- Enriquecer producto con campos calculados ---
 function enrichProducto(p) {
@@ -101,11 +117,12 @@ async function iniciarEscaneo() {
 }
 
   // --- Escanear producto (adaptado al nuevo modal) ---
+// --- Escanear producto (adaptado al nuevo modal) ---
 async function scan() {
   try {
     showLoader(true);
 
-    // Leer código desde input del dashboard o usar el del modal
+    // Leer código desde input principal o del modal
     const codigo = document.getElementById("barcode-input")?.value.trim()
                 || document.getElementById("scan-barcode")?.value.trim();
 
@@ -119,13 +136,13 @@ async function scan() {
     const data = await res.json();
 
     // Rellenar modal con datos de la API
-    document.getElementById("scan-img").src = data.imagen || "";
-    document.getElementById("scan-img").classList.toggle("hidden", !data.imagen);
+    const scanImg = document.getElementById("scan-img");
+    scanImg.src = data.imagen || "";
+    scanImg.classList.toggle("hidden", !data.imagen);
 
     document.getElementById("scan-nombre").value = data.nombre || "";
     document.getElementById("scan-brand").value = data.marca || "";
     document.getElementById("scan-formato").value = data.cantidad || "";
-
     document.getElementById("scan-cantidad").value = 1;
     document.getElementById("scan-ubicacion").value = "";
     document.getElementById("scan-caducidad").value = "";
@@ -137,8 +154,7 @@ async function scan() {
     await listAlmacenes("scan-ubicacion");
 
     // Mostrar modal
-    scanModal.classList.remove("hidden");
-    scanModal.classList.add("flex");
+    openModal("scan-modal");
 
   } catch (err) {
     console.error(err);
@@ -147,6 +163,7 @@ async function scan() {
     showLoader(false);
   }
 }
+
 
 
 // --- Listar inventario ---
@@ -254,9 +271,8 @@ async function addProduct() {
     const marca = document.getElementById("scan-brand").value.trim();
     const barCode = document.getElementById("scan-barcode").value.trim();
     const imagen = document.getElementById("scan-img").src || "";
-    
 
-    // 🔎 Validaciones
+    // Validaciones
     if (!nombre) {
       showToast("El nombre no puede estar vacío");
       return;
@@ -280,7 +296,6 @@ async function addProduct() {
 
     showLoader(true);
 
-    // Normalizar fecha a ISO (yyyy-mm-dd)
     const caducidadISO = caducidad
       ? new Date(caducidad).toISOString().split("T")[0]
       : "";
@@ -293,7 +308,7 @@ async function addProduct() {
       AlmacenID: ubicacion || "-",
       minStock,
       Marca: marca || "-",
-      barCode: barCode || "", // puede venir de escaneo, tecleo o vacío
+      barCode: barCode || "",
       Imagen: imagen
     };
 
@@ -308,8 +323,7 @@ async function addProduct() {
     showToast("Producto añadido correctamente");
 
     // Cerrar modal
-    document.getElementById("scan-modal").classList.add("hidden");
-    document.getElementById("scan-modal").classList.remove("flex");
+    closeModal("scan-modal");
 
     // Refrescar listado
     await list(currentFilter);
@@ -321,7 +335,6 @@ async function addProduct() {
     showLoader(false);
   }
 }
-
 
 
     // --- Listar almacenes en <select> ---
@@ -351,43 +364,67 @@ async function addProduct() {
   }
 
   // --- Modificar producto ---
-  async function modProduct(datos) {
-    try {
-      showLoader(true);
-      const body = {
-        ProductoID: datos.ProductoID,
-        Nombre: datos.Nombre,
-        Formato: datos.Formato,
-        Cantidad: datos.Cantidad,
-        Caducidad: datos.Caducidad,
-        AlmacenID: datos.AlmacenID,
-        minStock: datos.minStock ?? 1,
-        Marca: datos.Marca || "",
-        barCode: datos.barCode || "",
-        Imagen: datos.Imagen || ""
-      };
-
-      const res = await fetch(`${API_BASE}/producto/mod`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) throw new Error("Error en la API /producto/mod");
-
-      showToast("Producto modificado correctamente");
-      await list(currentFilter);
-
-      // Cerrar modal de edición
-      const editModal = document.getElementById("edit-modal");
-      editModal.classList.add("hidden");
-      editModal.classList.remove("flex");
-    } catch (err) {
-      console.error(err);
-      showToast("Error al modificar producto");
-    } finally {
-      showLoader(false);
+ // --- Modificar producto ---
+async function modProduct(datos) {
+  try {
+    // Validaciones
+    if (!datos.Nombre || !datos.Nombre.trim()) {
+      showToast("El nombre no puede estar vacío");
+      return;
     }
+    if (isNaN(datos.Cantidad) || datos.Cantidad <= 0) {
+      showToast("La cantidad debe ser mayor que 0");
+      return;
+    }
+    if (isNaN(datos.minStock) || datos.minStock < 0) {
+      showToast("El stock mínimo no puede ser negativo");
+      return;
+    }
+    if (datos.Caducidad && isNaN(new Date(datos.Caducidad))) {
+      showToast("La fecha de caducidad no es válida");
+      return;
+    }
+
+    // Normalizar fecha
+    const caducidadISO = datos.Caducidad
+      ? new Date(datos.Caducidad).toISOString().split("T")[0]
+      : "";
+
+    const body = {
+      ProductoID: datos.ProductoID,
+      Nombre: datos.Nombre.trim(),
+      Formato: datos.Formato?.trim() || "-",
+      Cantidad: Number(datos.Cantidad),
+      Caducidad: caducidadISO,
+      AlmacenID: datos.AlmacenID || "-",
+      minStock: Number(datos.minStock) || 1
+    };
+
+    const res = await fetch(`${API_BASE}/producto/mod`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) throw new Error("Error en la API /producto/mod");
+
+    showToast("Producto modificado correctamente");
+
+    // Refrescar listado
+    await list(currentFilter);
+
+    // Cerrar modal de edición
+    closeModal("edit-modal");
+
+
+  } catch (err) {
+    console.error(err);
+    showToast("Error al modificar producto");
+  } finally {
+    showLoader(false);
   }
+}
+
 
   // --- Eliminar producto ---
   async function delProduct(productoId) {
@@ -448,16 +485,15 @@ async function addProduct() {
     const option = [...select.options].find(opt => opt.textContent === ubicacion);
     if (option) select.value = option.value;
 
-    // Mostrar modal
-    editModal.classList.remove("hidden");
-    editModal.classList.add("flex");
-  });
+// Mostrar modal de edición
+openModal("edit-modal");
 
-  document.getElementById("edit-close").addEventListener("click", () => {
-    const editModal = document.getElementById("edit-modal");
-    editModal.classList.add("hidden");
-    editModal.classList.remove("flex");
-  });
+});
+// Cerrar modal
+document.getElementById("edit-close").addEventListener("click", () => {
+  closeModal("edit-modal");
+});
+
 
   document.getElementById("edit-save").addEventListener("click", async () => {
     const editModal = document.getElementById("edit-modal");
@@ -485,8 +521,7 @@ async function addProduct() {
     const productoId = editModal.dataset.productoId;
     if (confirm("¿Seguro que quieres eliminar este producto?")) {
       await delProduct(productoId);
-      editModal.classList.add("hidden");
-      editModal.classList.remove("flex");
+      openModal("edit-modal");
     }
   });
 
@@ -590,11 +625,12 @@ async function addProduct() {
   btnFilterExpiry.addEventListener("click", () => { list("expiry"); setActiveFilter(btnFilterExpiry); });
   searchInput.addEventListener("input", applySearch);
   searchClear.addEventListener("click", () => { searchInput.value = ""; applySearch(); });
-  scanClose.addEventListener("click", () => { scanModal.classList.add("hidden"); scanModal.classList.remove("flex"); });
+  scanClose.addEventListener("click", () => closeModal("scan-modal"));
   scanAdd.addEventListener("click", addProduct);
-  document.getElementById("btn-scan-barcode").addEventListener("click", async () => {
+// Escanear desde el botón del modal
+document.getElementById("btn-scan-barcode").addEventListener("click", async () => {
   try {
-    const codigo = await iniciarEscaneo(); // tu función de escaneo
+    const codigo = await iniciarEscaneo(); // tu función de escaneo real o simulada
     if (codigo) {
       document.getElementById("scan-barcode").value = codigo;
       showToast("Código escaneado: " + codigo);
@@ -604,6 +640,7 @@ async function addProduct() {
     showToast("Error al escanear código");
   }
 });
+
 
   // --- Eventos de gestión de almacenes ---
 document.getElementById("btn-almacenes").addEventListener("click", async () => {
@@ -649,6 +686,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
