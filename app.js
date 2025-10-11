@@ -374,7 +374,6 @@ async function addProduct() {
     }
   }
 
-  // --- Modificar producto ---
  // --- Modificar producto ---
 async function modProduct(datos) {
   try {
@@ -658,8 +657,6 @@ document.getElementById("edit-close").addEventListener("click", () => {
     if (!res.ok) throw new Error("Error en la API /scan");
     const data = await res.json();
 
-    console.log("Respuesta API /scan:", data); // 👈 depuración
-
     const scanModal = document.getElementById("scan-modal");
 
     // Rellenar campos del modal con la respuesta
@@ -717,15 +714,19 @@ document.getElementById("btn-scan-barcode").addEventListener("click", async () =
 
   // --- Eventos de gestión de almacenes ---
 document.getElementById("btn-almacenes").addEventListener("click", async () => {
-  await renderAlmacenes();
-  document.getElementById("almacen-modal").classList.remove("hidden");
-  document.getElementById("almacen-modal").classList.add("flex");
+  try {
+    // Mostrar modal inmediatamente
+    openModal("almacen-modal");
+
+    // Pintar "Cargando..." y luego la lista
+    await listAlmacenes("almacen-list");
+
+  } catch (err) {
+    console.error("Error al abrir almacenes:", err);
+    showToast("No se pudieron cargar los almacenes");
+  }
 });
 
-document.getElementById("almacen-close").addEventListener("click", () => {
-  document.getElementById("almacen-modal").classList.add("hidden");
-  document.getElementById("almacen-modal").classList.remove("flex");
-});
 
 document.getElementById("almacen-add").addEventListener("click", async () => {
   const nombre = document.getElementById("almacen-nombre").value.trim();
@@ -759,6 +760,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
