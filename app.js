@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const toast = document.getElementById("toast");
 
   // Input de código de barras
-  const barcodeInput = document.getElementById("barcode-input");
+  const barcodeInput = document.getElementById("scan-barcode");
 
   // Variables globales
   let currentFilter = "all";
@@ -135,8 +135,7 @@ async function scan() {
     showLoader(true);
 
     // Leer código desde input principal o del modal
-    const codigo = document.getElementById("barcode-input")?.value.trim()
-                || document.getElementById("scan-barcode")?.value.trim();
+    const codigo = document.getElementById("scan-barcode")?.value.trim();
 
     if (!codigo) {
       showToast("Introduce o escanea un código de barras");
@@ -713,6 +712,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
