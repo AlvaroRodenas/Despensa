@@ -556,45 +556,59 @@ document.getElementById("edit-close").addEventListener("click", () => {
     }
   }
 
-  async function modAlmacen(almacenId, nuevoNombre) {
-    try {
-      showLoader(true);
-      const body = { AlmacenID: almacenId, Nombre: nuevoNombre };
-      const res = await fetch(`${API_BASE}/almacen/mod`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) throw new Error("Error en la API /almacen/mod");
-      showToast("Almacén modificado correctamente");
-      await listAlmacenes();
-    } catch (err) {
-      console.error(err);
-      showToast("Error al modificar almacén");
-    } finally {
-      showLoader(false);
-    }
-  }
+async function modAlmacen(id) {
+  try {
+    const nombre = prompt("Nuevo nombre del almacén:");
+    if (!nombre) return;
 
-  async function delAlmacen(almacenId) {
-    try {
-      showLoader(true);
-      const body = { AlmacenID: almacenId };
-      const res = await fetch(`${API_BASE}/almacen/del`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) throw new Error("Error en la API /almacen/del");
-      showToast("Almacén eliminado correctamente");
-      await listAlmacenes();
-    } catch (err) {
-      console.error(err);
-      showToast("Error al eliminar almacén");
-    } finally {
-      showLoader(false);
-    }
+    const res = await fetch(`${API_BASE}/almacen/mod`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ almacenID, Nombre })
+    });
+
+    if (!res.ok) throw new Error("Error al modificar almacén");
+
+    showToast("Almacén actualizado");
+
+    // Refrescar UI
+    await renderAlmacenes("almacen-list");
+    await listAlmacenes("scan-ubicacion");
+    await listAlmacenes("edit-ubicacion");
+
+  } catch (err) {
+    console.error(err);
+    showToast("No se pudo modificar el almacén");
   }
+}
+
+
+ async function delAlmacen(almacenId) {
+  try {
+    showLoader(true);
+    const body = { AlmacenID: almacenId };
+    const res = await fetch(`${API_BASE}/almacen/del`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error("Error en la API /almacen/del");
+
+    showToast("Almacén eliminado correctamente");
+
+    // Refrescar UI en todos los sitios
+    await renderAlmacenes("almacen-list");
+    await listAlmacenes("scan-ubicacion");
+    await listAlmacenes("edit-ubicacion");
+
+  } catch (err) {
+    console.error(err);
+    showToast("Error al eliminar almacén");
+  } finally {
+    showLoader(false);
+  }
+}
+
   /*modal almacenes*/
   async function renderAlmacenes() {
   try {
@@ -762,6 +776,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
