@@ -666,7 +666,7 @@ document.getElementById("btn-fetch-barcode").addEventListener("click", async () 
 
     document.getElementById("scan-nombre").value = data.Nombre || "";
     document.getElementById("scan-brand").value = data.Marca || "";
-    document.getElementById("scan-formato").value = data.Cantidad || "";
+    document.getElementById("scan-formato").value = data.Formato || "";
     document.getElementById("scan-cantidad").value = 1;
     document.getElementById("scan-ubicacion").value = "";
     document.getElementById("scan-caducidad").value = "";
@@ -753,6 +753,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
