@@ -58,22 +58,34 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     activeBtn.classList.add("ring-2", "ring-offset-2", "ring-green-500");
   }
-// --- Utilidades para modales ---
+// --- Utilidades para modales con animación ---
 function openModal(id) {
   const modal = document.getElementById(id);
   if (modal) {
     modal.classList.remove("hidden");
     modal.classList.add("flex");
+
+    // Animación de entrada
+    modal.classList.remove("opacity-0", "translate-y-4");
+    modal.classList.add("opacity-100", "translate-y-0");
   }
 }
 
 function closeModal(id) {
   const modal = document.getElementById(id);
   if (modal) {
-    modal.classList.add("hidden");
-    modal.classList.remove("flex");
+    // Animación de salida
+    modal.classList.remove("opacity-100", "translate-y-0");
+    modal.classList.add("opacity-0", "translate-y-4");
+
+    // Esperar a que termine la animación antes de ocultar
+    setTimeout(() => {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }, 200); // ajusta el tiempo a la duración de tu transición en CSS
   }
 }
+
 
 // --- Enriquecer producto con campos calculados ---
 function enrichProducto(p) {
@@ -686,6 +698,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
