@@ -655,7 +655,7 @@ document.getElementById("btn-fetch-barcode").addEventListener("click", async () 
 
     showLoader(true);
 
-    const res = await fetch(`${API_BASE}/producto/scan?codigo_barras=${codigo}`);
+    const res = await fetch(`${API_BASE}/producto/scan?barCode=${codigo}`);
     if (!res.ok) throw new Error("Error en la API /scan");
     const data = await res.json();
 
@@ -753,6 +753,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
