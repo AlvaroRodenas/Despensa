@@ -630,7 +630,22 @@ document.getElementById("edit-close").addEventListener("click", () => {
 
 
   // --- Eventos principales ---
-  btnScan.addEventListener("click", scan);
+  btnScan.addEventListener("click", () => {
+  // Limpiar campos del modal de alta
+  document.getElementById("scan-barcode").value = "";
+  document.getElementById("scan-nombre").value = "";
+  document.getElementById("scan-brand").value = "";
+  document.getElementById("scan-formato").value = "";
+  document.getElementById("scan-cantidad").value = 1;
+  document.getElementById("scan-ubicacion").value = "";
+  document.getElementById("scan-caducidad").value = "";
+  document.getElementById("scan-img").src = "";
+  document.getElementById("scan-img").classList.add("hidden");
+
+  // Abrir modal de alta
+  openModal("scan-modal");
+});
+
   btnList.addEventListener("click", () => { list("all"); setActiveFilter(btnFilterAll); });
   btnFilterAll.addEventListener("click", () => { list("all"); setActiveFilter(btnFilterAll); });
   btnFilterStock.addEventListener("click", () => { list("stock"); setActiveFilter(btnFilterStock); });
@@ -698,6 +713,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
