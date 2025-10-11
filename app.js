@@ -249,7 +249,7 @@ async function addProduct() {
       AlmacenID: scanUbicacion.value || "",
       minStock: Number(document.getElementById("scan-minstock")?.value) || 1,
       Marca: scanBrand.textContent.trim() || "",
-      CodigoBarras: scanModal.dataset.codigo || "", // usa el nombre real de la hoja
+      barCode: scanModal.dataset.codigo || "", // usa el nombre real de la hoja
       Imagen: scanImg.src || ""
     };
 
@@ -591,6 +591,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
