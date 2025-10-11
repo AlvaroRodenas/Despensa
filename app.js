@@ -222,34 +222,53 @@ function formatFecha(fechaISO) {
     });
   }
 // --- Guardar producto desde modal ---
+// --- Guardar producto desde modal ---
 async function addProduct() {
   try {
-    if (!scanCantidad.value || scanCantidad.value <= 0) {
+    const nombre = scanName.textContent.trim();
+    const formato = scanFormato.value.trim();
+    const cantidad = Number(scanCantidad.value);
+    const caducidad = scanCaducidad.value;
+    const minStock = Number(document.getElementById("scan-minstock")?.value) || 1;
+
+    // 🔎 Validaciones
+    if (!nombre) {
+      showToast("El nombre no puede estar vacío");
+      return;
+    }
+    if (isNaN(cantidad) || cantidad <= 0) {
       showToast("La cantidad debe ser mayor que 0");
       return;
     }
-    if (!scanCaducidad.value) {
+    if (isNaN(minStock) || minStock < 0) {
+      showToast("El stock mínimo no puede ser negativo");
+      return;
+    }
+    if (!caducidad) {
       showToast("Debes indicar una fecha de caducidad");
+      return;
+    }
+    if (caducidad && isNaN(new Date(caducidad))) {
+      showToast("La fecha de caducidad no es válida");
       return;
     }
 
     showLoader(true);
 
     // Normalizar fecha a ISO (yyyy-mm-dd) para consistencia
-    const caducidad = scanCaducidad.value;
     const caducidadISO = caducidad
       ? new Date(caducidad).toISOString().split("T")[0]
       : "";
 
     const body = {
-      Nombre: scanName.textContent.trim() || "",
-      Formato: scanFormato.value.trim() || "",
-      Cantidad: Number(scanCantidad.value) || 1,
+      Nombre: nombre,
+      Formato: formato || "-",
+      Cantidad: cantidad,
       Caducidad: caducidadISO,
-      AlmacenID: scanUbicacion.value || "",
-      minStock: Number(document.getElementById("scan-minstock")?.value) || 1,
-      Marca: scanBrand.textContent.trim() || "",
-      barCode: scanModal.dataset.codigo || "", // usa el nombre real de la hoja
+      AlmacenID: scanUbicacion.value || "-",
+      minStock,
+      Marca: scanBrand.textContent.trim() || "-",
+      barCode: scanModal.dataset.codigo || "",
       Imagen: scanImg.src || ""
     };
 
@@ -591,6 +610,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
