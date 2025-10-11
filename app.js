@@ -609,34 +609,33 @@ async function modAlmacen(id) {
   }
 }
 
-  /*modal almacenes*/
-  async function renderAlmacenes() {
+ /* Modal almacenes*/
+  async function renderAlmacenes(targetId) {
+  const contenedor = document.getElementById(targetId);
+
+  // Mostrar mensaje de carga inmediatamente
+  contenedor.innerHTML = `<div class="p-2 text-gray-500">Cargando...</div>`;
+
   try {
-    showLoader(true);
     const res = await fetch(`${API_BASE}/almacen/list`);
-    if (!res.ok) throw new Error("Error en la API /almacen/list");
+    if (!res.ok) throw new Error("Error al cargar almacenes");
     const data = await res.json();
 
-    const ul = document.getElementById("almacen-list");
-    ul.innerHTML = "";
-
-    (data.items || []).forEach(al => {
-      const li = document.createElement("li");
-      li.className = "flex justify-between items-center border px-2 py-1 rounded";
-      li.innerHTML = `
-        <span>${al.Nombre}</span>
+    contenedor.innerHTML = data.map(a => `
+      <div class="flex items-center justify-between p-2 border-b">
+        <span>${a.nombre}</span>
         <div class="flex gap-2">
-          <button class="text-blue-600" data-id="${al.AlmacenID}" data-action="edit">✏️</button>
-          <button class="text-red-600" data-id="${al.AlmacenID}" data-action="delete">🗑️</button>
+          <button class="px-2 py-1 bg-yellow-400 text-white rounded edit-almacen" data-id="${a.id}">✏️</button>
+          <button class="px-2 py-1 bg-red-500 text-white rounded del-almacen" data-id="${a.id}">🗑️</button>
         </div>
-      `;
-      ul.appendChild(li);
-    });
+      </div>
+    `).join("");
+
+    // enganchar listeners aquí…
+
   } catch (err) {
     console.error(err);
-    showToast("Error al listar almacenes");
-  } finally {
-    showLoader(false);
+    contenedor.innerHTML = `<div class="p-2 text-red-500">Error al cargar almacenes</div>`;
   }
 }
 
@@ -776,6 +775,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
