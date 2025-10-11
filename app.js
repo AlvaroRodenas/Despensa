@@ -705,6 +705,8 @@ document.getElementById("btn-scan-barcode").addEventListener("click", async () =
     if (codigo) {
       document.getElementById("scan-barcode").value = codigo;
       showToast("Código escaneado: " + codigo);
+      // Disparar el mismo evento que el botón lupa
+      document.getElementById("btn-fetch-barcode").click();
     }
   } catch (err) {
     console.error(err);
@@ -757,6 +759,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
