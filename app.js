@@ -644,6 +644,47 @@ document.getElementById("edit-close").addEventListener("click", () => {
   // Abrir modal de alta
   openModal("scan-modal");
 });
+  // Botón para consultar la API /scan con el valor del campo scan-barcode
+document.getElementById("btn-fetch-barcode").addEventListener("click", async () => {
+  try {
+    const codigo = document.getElementById("scan-barcode").value.trim();
+    if (!codigo) {
+      showToast("Introduce o escanea un código de barras");
+      return;
+    }
+
+    showLoader(true);
+
+    const res = await fetch(`${API_BASE}/producto/scan?codigo_barras=${codigo}`);
+    if (!res.ok) throw new Error("Error en la API /scan");
+    const data = await res.json();
+
+    // Rellenar campos del modal con la respuesta
+    const scanImg = document.getElementById("scan-img");
+    scanImg.src = data.imagen || "";
+    scanImg.classList.toggle("hidden", !data.imagen);
+
+    document.getElementById("scan-nombre").value = data.nombre || "";
+    document.getElementById("scan-brand").value = data.marca || "";
+    document.getElementById("scan-formato").value = data.cantidad || "";
+    document.getElementById("scan-cantidad").value = 1;
+    document.getElementById("scan-ubicacion").value = "";
+    document.getElementById("scan-caducidad").value = "";
+
+    scanModal.dataset.codigo = data.codigo_barras || codigo;
+
+    await listAlmacenes("scan-ubicacion");
+
+    showToast("Datos cargados desde la API");
+
+  } catch (err) {
+    console.error(err);
+    showToast("Error al consultar la API /scan");
+  } finally {
+    showLoader(false);
+  }
+});
+
 
   btnList.addEventListener("click", () => { list("all"); setActiveFilter(btnFilterAll); });
   btnFilterAll.addEventListener("click", () => { list("all"); setActiveFilter(btnFilterAll); });
@@ -712,6 +753,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
