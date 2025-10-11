@@ -157,6 +157,17 @@ async function list(filter = currentFilter) {
         </tr>`;
       return;
     }
+    
+    //formato visible fecha dd/mm/aaaa
+function formatFecha(fechaISO) {
+  if (!fechaISO) return "-";
+  const d = new Date(fechaISO);
+  if (isNaN(d)) return "-";
+  const dia = String(d.getDate()).padStart(2, "0");
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const año = d.getFullYear();
+  return `${dia}/${mes}/${año}`;
+}
 
     // Pintar filas
     items.forEach(prod => {
@@ -183,7 +194,7 @@ async function list(filter = currentFilter) {
         </td>
         <td class="px-4 py-3">${prod.Formato || "-"}</td>
         <td class="px-4 py-3">${prod.Cantidad || "-"}</td>
-        <td class="px-4 py-3">${prod.Caducidad || "-"}</td>
+        <td class="px-4 py-3">${formatFecha(prod.Caducidad)}</td>
         <td class="px-4 py-3">${prod.AlmacenNombre || "-"}</td>
         <td class="px-4 py-3">${prod.StockBajo === true ? "⚠️ Sí" : "No"}</td>
       `;
@@ -403,12 +414,15 @@ async function list(filter = currentFilter) {
       ProductoID: productoId,
       Nombre: document.getElementById("edit-nombre").value,
       Formato: document.getElementById("edit-formato").value,
-      Cantidad: document.getElementById("edit-cantidad").value,
+      Cantidad: document.getElementById("edit-cantidad").value || 1,
       Caducidad: document.getElementById("edit-caducidad").value,
       AlmacenID: document.getElementById("edit-ubicacion").value,
       minStock: Number(document.getElementById("edit-minstock").value) || 1
     };
+    const caducidad = document.getElementById("edit-caducidad").value;
+    datos.Caducidad = caducidad ? new Date(caducidad).toISOString().split("T")[0] : "";
     await modProduct(datos);
+  
   });
 
   document.getElementById("edit-delete").addEventListener("click", async () => {
@@ -567,6 +581,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
