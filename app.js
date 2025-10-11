@@ -222,14 +222,17 @@ function formatFecha(fechaISO) {
     });
   }
 // --- Guardar producto desde modal ---
-// --- Guardar producto desde modal ---
 async function addProduct() {
   try {
-    const nombre = scanName.textContent.trim();
-    const formato = scanFormato.value.trim();
-    const cantidad = Number(scanCantidad.value);
-    const caducidad = scanCaducidad.value;
+    const nombre = document.getElementById("scan-nombre").value.trim();
+    const formato = document.getElementById("scan-formato").value.trim();
+    const cantidad = Number(document.getElementById("scan-cantidad").value);
+    const caducidad = document.getElementById("scan-caducidad").value;
+    const ubicacion = document.getElementById("scan-ubicacion").value;
     const minStock = Number(document.getElementById("scan-minstock")?.value) || 1;
+    const marca = document.getElementById("scan-brand").value.trim();
+    const barCode = document.getElementById("scan-barcode").value.trim();
+    const imagen = document.getElementById("scan-img").src || "";
 
     // 🔎 Validaciones
     if (!nombre) {
@@ -255,7 +258,7 @@ async function addProduct() {
 
     showLoader(true);
 
-    // Normalizar fecha a ISO (yyyy-mm-dd) para consistencia
+    // Normalizar fecha a ISO (yyyy-mm-dd)
     const caducidadISO = caducidad
       ? new Date(caducidad).toISOString().split("T")[0]
       : "";
@@ -265,11 +268,11 @@ async function addProduct() {
       Formato: formato || "-",
       Cantidad: cantidad,
       Caducidad: caducidadISO,
-      AlmacenID: scanUbicacion.value || "-",
+      AlmacenID: ubicacion || "-",
       minStock,
-      Marca: scanBrand.textContent.trim() || "-",
-      barCode: scanModal.dataset.codigo || "",
-      Imagen: scanImg.src || ""
+      Marca: marca || "-",
+      barCode: barCode || "", // puede venir de escaneo, tecleo o vacío
+      Imagen: imagen
     };
 
     const res = await fetch(`${API_BASE}/producto/add`, {
@@ -283,8 +286,8 @@ async function addProduct() {
     showToast("Producto añadido correctamente");
 
     // Cerrar modal
-    scanModal.classList.add("hidden");
-    scanModal.classList.remove("flex");
+    document.getElementById("scan-modal").classList.add("hidden");
+    document.getElementById("scan-modal").classList.remove("flex");
 
     // Refrescar listado
     await list(currentFilter);
@@ -296,6 +299,7 @@ async function addProduct() {
     showLoader(false);
   }
 }
+
 
 
     // --- Listar almacenes en <select> ---
@@ -610,6 +614,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
