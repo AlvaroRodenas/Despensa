@@ -153,17 +153,21 @@ async function iniciarEscaneo() {
       }
       Quagga.start();
     });
-
+    
+    let quaggaDetected = false;
     // Cuando detecta un código
     Quagga.onDetected(result => {
+  if (quaggaDetected) return;
+  quaggaDetected = true;
+
   const code = result.codeResult.code;
   document.getElementById("scan-barcode").value = code;
 
-  // Ejecutar la consulta de la lupa
   (async () => {
     await scan();
     Quagga.stop();
     closeModal("camera-modal");
+    quaggaDetected = false; // reset para futuras sesiones
   })();
 });
 
@@ -830,6 +834,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
