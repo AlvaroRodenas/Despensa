@@ -156,11 +156,17 @@ async function iniciarEscaneo() {
 
     // Cuando detecta un código
     Quagga.onDetected(result => {
-      const code = result.codeResult.code;
-      Quagga.stop();
-      closeModal("camera-modal");
-      resolve(code);
-    });
+  const code = result.codeResult.code;
+  document.getElementById("scan-barcode").value = code;
+
+  // Ejecutar la consulta de la lupa
+  (async () => {
+    await scan();
+    Quagga.stop();
+    closeModal("camera-modal");
+  })();
+});
+
 
     // Si el usuario cierra manualmente el modal
     document.getElementById("camera-close").addEventListener("click", () => {
@@ -824,6 +830,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
