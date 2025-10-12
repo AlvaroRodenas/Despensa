@@ -816,6 +816,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
       await renderAlmacenes();
     }
   }
+ }); 
   document.getElementById("almacen-close").addEventListener("click", () => {
   closeModal("almacen-modal");
 });
@@ -823,5 +824,6 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
