@@ -753,7 +753,7 @@ document.getElementById("btn-scan-barcode").addEventListener("click", async () =
   try {
     const codigo = await iniciarEscaneo(); // abre modal + espera detección
     document.getElementById("scan-barcode").value = codigo;
-    await scan(); // tu flujo actual de la lupa
+    scan(); // tu flujo actual de la lupa
   } catch (err) {
     console.error("Error en el escaneo:", err);
     showToast("No se pudo leer el código de barras");
@@ -764,7 +764,7 @@ document.getElementById("btn-scan-barcode").addEventListener("click", async () =
 Quagga.onDetected(result => {
   const code = result.codeResult.code;
   document.getElementById("scan-barcode").value = code;
-  await scan(); // tu función de la lupa
+  scan(); // tu función de la lupa
   Quagga.stop();
   closeModal("camera-modal");
 });
@@ -823,4 +823,5 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
