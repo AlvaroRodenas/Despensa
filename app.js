@@ -825,10 +825,11 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   closeModal("almacen-modal");
 });
 
-});
+//});
 
 
   // --- Inicialización ---
   list("all");
 });
+
 
