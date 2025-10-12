@@ -753,20 +753,18 @@ document.getElementById("btn-scan-barcode").addEventListener("click", async () =
   try {
     const codigo = await iniciarEscaneo(); // abre modal + espera detección
     document.getElementById("scan-barcode").value = codigo;
-    fetchAndFillByBarcode(); // tu flujo actual de la lupa
+    await scan(); // tu flujo actual de la lupa
   } catch (err) {
     console.error("Error en el escaneo:", err);
     showToast("No se pudo leer el código de barras");
   }
 });
 
-//});
-
 // Al detectar un código
 Quagga.onDetected(result => {
   const code = result.codeResult.code;
   document.getElementById("scan-barcode").value = code;
-  fetchAndFillByBarcode(); // tu función de la lupa
+  await scan(); // tu función de la lupa
   Quagga.stop();
   closeModal("camera-modal");
 });
@@ -776,8 +774,6 @@ document.getElementById("camera-close").addEventListener("click", () => {
   Quagga.stop();
   closeModal("camera-modal");
 });
-
-
 
   // --- Eventos de gestión de almacenes ---
 document.getElementById("btn-almacenes").addEventListener("click", async () => {
@@ -793,7 +789,6 @@ document.getElementById("btn-almacenes").addEventListener("click", async () => {
     showToast("No se pudieron cargar los almacenes");
   }
 });
-
 
 document.getElementById("almacen-add").addEventListener("click", async () => {
   const nombre = document.getElementById("almacen-nombre").value.trim();
@@ -825,12 +820,6 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   closeModal("almacen-modal");
 });
 
-//});
-
-
   // --- Inicialización ---
   list("all");
 });
-
-
-
