@@ -760,7 +760,7 @@ document.getElementById("btn-scan-barcode").addEventListener("click", async () =
   }
 });
 
-});
+//});
 
 // Al detectar un código
 Quagga.onDetected(result => {
@@ -831,5 +831,6 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
