@@ -185,7 +185,7 @@ async function scan() {
       return;
     }
 
-    const res = await fetch(`${API_BASE}/producto/scan?codigo_barras=${codigo}`);
+    const res = await fetch(`${API_BASE}/producto/scan?barCode=${codigo}`);
     if (!res.ok) throw new Error("Error en la API /scan");
     const data = await res.json();
 
@@ -202,8 +202,8 @@ async function scan() {
     document.getElementById("scan-caducidad").value = "";
 
     // Guardar el código en dataset y en el input
-    scanModal.dataset.codigo = data.codigo_barras || codigo;
-    document.getElementById("scan-barcode").value = data.codigo_barras || codigo;
+    scanModal.dataset.codigo = data.barCode || codigo;
+    document.getElementById("scan-barcode").value = data.barCode || codigo;
 
     await listAlmacenes("scan-ubicacion");
 
@@ -607,7 +607,7 @@ async function modAlmacen(id) {
     const res = await fetch(`${API_BASE}/almacen/mod`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ almacenID, Nombre })
+      body: JSON.stringify({ almacenID: id, Nombre: nombre })
     });
 
     if (!res.ok) throw new Error("Error al modificar almacén");
@@ -823,3 +823,4 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
