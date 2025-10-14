@@ -211,7 +211,20 @@ async function scan() {
     // Guardar el código en dataset y en el input
     scanModal.dataset.codigo = data.barCode || codigo;
     document.getElementById("scan-barcode").value = data.barCode || codigo;
-
+    // Guardar datos extra en dataset (no visibles en el modal)
+    scanModal.dataset.ingredientes = data.ingredientes || "";
+    scanModal.dataset.nutriScore = data.nutriScore || "";
+    if (data.tablaNutricional) {
+     scanModal.dataset.energia = data.tablaNutricional.energia || "";
+     scanModal.dataset.grasas = data.tablaNutricional.grasas || "";
+     scanModal.dataset.grasas_saturadas = data.tablaNutricional.grasas_saturadas || "";
+     scanModal.dataset.hidratos = data.tablaNutricional.hidratos || "";
+     scanModal.dataset.azucares = data.tablaNutricional.azucares || "";
+     scanModal.dataset.fibra = data.tablaNutricional.fibra || "";
+     scanModal.dataset.proteinas = data.tablaNutricional.proteinas || "";
+     scanModal.dataset.sal = data.tablaNutricional.sal || "";
+    }
+    
     await listAlmacenes("scan-ubicacion");
 
     // Mostrar modal
@@ -370,7 +383,17 @@ async function addProduct() {
       minStock,
       Marca: marca || "-",
       barCode: barCode || "",
-      Imagen: imagen
+      Imagen: imagen,
+      Ingredientes: scanModal.dataset.ingredientes || "",
+      NutriScore: scanModal.dataset.nutriScore || "",
+      Energia: scanModal.dataset.energia || "",
+      Grasas: scanModal.dataset.grasas || "",
+      GrasasSaturadas: scanModal.dataset.grasas_saturadas || "",
+      Hidratos: scanModal.dataset.hidratos || "",
+      Azucares: scanModal.dataset.azucares || "",
+      Fibra: scanModal.dataset.fibra || "",
+      Proteinas: scanModal.dataset.proteinas || "",
+      Sal: scanModal.dataset.sal || ""
     };
 
     const res = await fetch(`${API_BASE}/producto/add`, {
@@ -831,6 +854,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
