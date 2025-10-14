@@ -123,27 +123,21 @@ function applyFilter(items, filter) {
   }
 }
 async function iniciarEscaneo() {
-  // Verificar soporte de cámara
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     showToast("Este dispositivo/navegador no soporta cámara. Introduce el código manualmente.");
     throw new Error("Cámara no soportada");
   }
 
   return new Promise((resolve, reject) => {
-    // Abrir modal de cámara
     openModal("camera-modal");
 
     Quagga.init({
       inputStream: {
         type: "LiveStream",
-        constraints: {
-          facingMode: "environment" // cámara trasera
-        },
+        constraints: { facingMode: "environment" },
         target: document.querySelector('#camera-stream')
       },
-      decoder: {
-        readers: ["ean_reader", "upc_reader", "code_128_reader"]
-      }
+      decoder: { readers: ["ean_reader", "upc_reader", "code_128_reader"] }
     }, err => {
       if (err) {
         console.error("Error al iniciar Quagga:", err);
@@ -153,26 +147,28 @@ async function iniciarEscaneo() {
       }
       Quagga.start();
     });
-    
+
     let quaggaDetected = false;
-    // Cuando detecta un código
-    Quagga.onDetected(result => {
-  if (quaggaDetected) return;
-  quaggaDetected = true;
 
-  const code = result.codeResult.code;
-  document.getElementById("scan-barcode").value = code;
+    Quagga.onDetected(async result => {
+      if (quaggaDetected) return;
+      quaggaDetected = true;
 
-  (async () => {
-    await scan();
-    Quagga.stop();
-    closeModal("camera-modal");
-    quaggaDetected = false; // reset para futuras sesiones
-  })();
-});
+      const code = result.codeResult.code;
+      document.getElementById("scan-barcode").value = code;
 
+      try {
+        await scan(); // ahora sí se ejecuta la consulta al backend
+        resolve(code); // resolvemos la promesa con el código
+      } catch (err) {
+        reject(err);
+      } finally {
+        Quagga.stop();
+        closeModal("camera-modal");
+        quaggaDetected = false;
+      }
+    });
 
-    // Si el usuario cierra manualmente el modal
     document.getElementById("camera-close").addEventListener("click", () => {
       Quagga.stop();
       closeModal("camera-modal");
@@ -180,6 +176,7 @@ async function iniciarEscaneo() {
     }, { once: true });
   });
 }
+
 
 
 // --- Escanear producto (adaptado al nuevo modal) ---
@@ -834,6 +831,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
