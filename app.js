@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   const isGitHub = location.hostname.includes("github.io");
   const API_BASE = isGitHub
-    ? "https://cookie-responding-equipment-graphical.trycloudflare.com/webhook/api/despensa"
+    ? "https://tumor-cleveland-deputy-thunder.trycloudflare.com/webhook/api/despensa"
     : "http://192.168.1.40:5678/webhook/api/despensa";
 
   // Botones principales
@@ -834,6 +834,7 @@ document.getElementById("almacen-list").addEventListener("click", async (e) => {
   // --- Inicialización ---
   list("all");
 });
+
 
 
 
